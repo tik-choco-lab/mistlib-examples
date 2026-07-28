@@ -1,57 +1,40 @@
-# MistLib Python Examples
+# Python examples
 
-MistLibをPythonから使用するサンプル集です。
+Samples using mistlib from Python.
 
-## 📁 コンテンツ
-- `gui_client.py`: Pygameを使用した2D空間の視覚化シミュレーター。ボットや自分自身の位置をリアルタイムで表示します。
-- `cli_client.py`: コンソールベースのシンプルな位置更新サンプル。
+日本語版: [README.ja.md](README.ja.md)
 
-## 🚀 動かし方
+- `gui_client.py`: 2D visualization of the space with Pygame. Shows your own position and the bots in real time.
+- `cli_client.py`: Console-based position updates.
+- `log/`: gRPC log collection server and sender.
 
-### 1. 依存関係のインストール
-PygameとWebSocketクライアントが必要です。
-`config.yaml` を使う場合は `PyYAML` も入れてください（未導入時は JSON 形式ファイルとしても読めます）。
+## Running
 
-```bash
-pip install pygame websocket-client python-dotenv pyyaml
+Install the dependencies and place the engine binary (see the [root README](../../README.md)):
+
+```sh
+just deps
+just sync
 ```
 
-### 2. Rustライブラリのビルド
-事前にCoreライブラリをビルドしておく必要があります。
+Then run a sample from the repository root:
 
-```bash
-cargo build
+```sh
+python examples/python/gui_client.py --id my-node --room demo-room
 ```
 
-### 3. サンプルの実行
-ルートディレクトリから実行する場合：
+Or via `just`: `just gui`, `just cli`, `just bot` (headless).
 
-```bash
-python examples/python/gui_client.py
-```
+## Options
 
-#### オプション
-- `--id`: ノードIDの指定
-- `--room`: 接続するルーム名
-- `--headless`: GUIなしで実行 (ボット用)
-- `--min-speed`, `--max-speed`: 移動速度の範囲
-- `--world-size`: 空間のサイズ
-- `--config`: 設定ファイル（YAML/JSON）
-- `--rust-config-path`: Rustエンジンへ `set_config` する設定ファイル（YAML/JSON）
+| Option | Description |
+| --- | --- |
+| `--id` | Node ID |
+| `--room` | Room to join |
+| `--headless` | Run without a GUI (for bots) |
+| `--min-speed`, `--max-speed` | Movement speed range |
+| `--world-size` | Size of the space |
+| `--config` | Client config file (YAML/JSON); `PyYAML` is required for YAML |
+| `--rust-config-path` | Config file passed to the engine via `set_config` before `MistNode.init()`; its keys match the Rust-side `Config` struct |
 
-### 4. configファイルで実行（推奨）
-
-`tests/config/node.yaml` を編集して実行できます。
-
-```bash
-python examples/python/gui_client.py --config tests/config/node.yaml
-```
-
-CLI引数を指定した場合は、`config.yaml` よりCLI引数が優先されます。
-
-`rust-config-path` を指定すると、`MistNode.init()` の前に Python wrapper から `set_config` が呼ばれます。
-このファイルは Rust 側の `Config` 構造に対応したキーで定義してください。
-
-```bash
-python examples/python/gui_client.py --id my-node --room demo-room --min-speed 0.0 --max-speed 5.0
-```
+CLI arguments take precedence over the config file.

@@ -1,68 +1,67 @@
 # mistlib-examples
 
-MistLib のクライアントラッパー (Python / Web / Unity) と、その利用例です。
+Client wrappers for mistlib (Python / Web / Unity) and usage examples.
 
-エンジン本体 (Rust コア、ネイティブ / WebAssembly ビルド) は別リポジトリで管理されており、
-このリポジトリには配布用のクライアントコードとサンプルのみが含まれます。
+The engine itself (the Rust core and its native / WebAssembly builds) lives in a separate
+repository. This repository contains only the client code and the samples.
 
-## 構成
+日本語版: [README.ja.md](README.ja.md)
 
-| パス | 内容 |
+## Layout
+
+| Path | Contents |
 | --- | --- |
-| `wrappers/python/` | Python ラッパー (`mist` パッケージ、ctypes 経由でネイティブライブラリを呼び出し) |
-| `wrappers/web/` | Web ラッパー (WebAssembly ビルドを読み込む ES モジュール) |
-| `wrappers/unity/` | Unity パッケージ (`com.tik-choco.mistlib`、P/Invoke 経由) |
-| `examples/python/` | CLI / GUI クライアントと、gRPC ログ収集のサンプル |
-| `examples/web/` | ブラウザ向けデモ (3D メタバース、メディア、最適化デモ) |
+| `wrappers/python/` | Python wrapper (the `mist` package, calling the native library through ctypes) |
+| `wrappers/web/` | Web wrapper (an ES module that loads the WebAssembly build) |
+| `wrappers/unity/` | Unity package (`com.tik-choco.mistlib`, via P/Invoke) |
+| `examples/python/` | CLI / GUI clients and a gRPC log collection sample |
+| `examples/web/` | Browser demos (3D metaverse, media, optimization) |
 
-## セットアップ
+## Setup
 
-各ラッパーは MistLib エンジンのビルド済みバイナリを必要とします。これらはこの
-リポジトリには含まれず、`scripts/sync-mistlib.sh` でエンジン側リポジトリから取得します。
+Every wrapper needs a prebuilt engine binary. Those binaries are not part of this repository;
+`scripts/sync-mistlib.sh` fetches them from the engine repository, which you need access to.
 
 ```sh
-cp .env.example .env   # 取得元とブランチを設定
-just sync              # または ./scripts/sync-mistlib.sh
+cp .env.example .env   # configure the source repository and branch
+just sync              # or ./scripts/sync-mistlib.sh
 ```
 
-成果物は各ラッパーが探索するパスへ配置されます (いずれも git 管理外)。
+The artifacts are placed where each wrapper looks for them (all untracked).
 
-| 配置先 | 参照元 |
+| Destination | Referenced by |
 | --- | --- |
 | `target/release/libmistlib.so` | `wrappers/python/mist/core.py` |
 | `mistlib-wasm/pkg/` | `wrappers/web/index.js` |
-| `wrappers/unity/MistLib/Runtime/Plugins/` | Unity のネイティブプラグイン |
+| `wrappers/unity/MistLib/Runtime/Plugins/` | Unity native plugins |
 
-設定項目は `.env.example` を参照してください。`MISTLIB_DEV_PATH` に既存のローカル
-チェックアウトを指定した場合、スクリプトはそのチェックアウトを一切変更しません
-(fetch も checkout も行いません)。空にすると `.mistlib-dev/` に clone して
-スクリプト側で管理します。
+See `.env.example` for the available settings. If `MISTLIB_DEV_PATH` points at an existing
+local checkout, the script leaves that checkout untouched — it neither fetches nor checks out.
+Leave it empty to have the script clone into `.mistlib-dev/` and manage it itself.
 
-エンジン側リポジトリへのアクセス権が必要です。
+## Commands
 
-## コマンド
+We use [just](https://github.com/casey/just). Run `just` to list the recipes.
 
-[just](https://github.com/casey/just) を使います。`just` で一覧を表示できます。
-
-| コマンド | 内容 |
+| Command | Description |
 | --- | --- |
-| `just sync` | エンジンをビルドして成果物を配置 |
-| `just sync-fast` | ビルドを省略してコピーのみ |
-| `just serve` | Web サンプル用の HTTP サーバーを起動 |
-| `just deps` | Python サンプルの依存関係をインストール |
-| `just gui` / `just cli` / `just bot` | Python サンプルを起動 |
-| `just log-server` | gRPC ログ収集サーバーを起動 |
-| `just proto` | `log.proto` から Python スタブを再生成 |
-| `just check` | Python / JavaScript の構文チェック |
-| `just clean` | 取得した成果物を削除 |
+| `just sync` | Build the engine and place the artifacts |
+| `just sync-fast` | Skip the build and only copy existing artifacts |
+| `just serve` | Start an HTTP server for the web samples |
+| `just deps` | Install the Python sample dependencies |
+| `just gui` / `just cli` / `just bot` | Run the Python samples |
+| `just log-server` | Start the gRPC log collection server |
+| `just proto` | Regenerate the Python stubs from `log.proto` |
+| `just check` | Syntax-check the Python and JavaScript sources |
+| `just clean` | Remove the fetched artifacts |
 
-## シグナリング
+## Signaling
 
-デフォルトのシグナリング方式は Nostr です。既定のリレー設定はラッパーごとに異なります。
+The default signaling method is Nostr. The default relay configuration differs per wrapper.
 
-- Python / Unity: ローカルリレー `ws://127.0.0.1:7777` を参照するため、リレーを起動するか設定を上書きしてください。
-- Web: `relays` が空のため、エンジン既定のリレーリストが使われます。任意のリレーを使う場合は設定で明示してください。
+- Python / Unity: they point at the local relay `ws://127.0.0.1:7777`, so either run a relay or override the setting.
+- Web: `relays` is empty, so the engine's built-in relay list is used. Set it explicitly to use your own relays.
 
-## ライセンス
+## License
 
 [Apache License 2.0](LICENSE)

@@ -1,22 +1,20 @@
-# MistLib Python Wrapper
+# Python wrapper
 
-MistLibのctypesラッパーです。Rustでビルドされたダイナミックライブラリ (`.dll` / `.so` / `.dylib`) をPythonから呼び出せるようにします。
+A ctypes wrapper that calls the mistlib dynamic library (`.dll` / `.so` / `.dylib`) from Python.
 
-## 📁 構成
-- `mist/`: ラッパーの本体パッケージ
-  - `core.py`: C FFI 定義と MistNode クラス
-  - `transform.py`: 位置同期用ユーティリティ
+日本語版: [README.ja.md](README.ja.md)
 
-## 🚀 使い方
-このディレクトリを `PYTHONPATH` に追加することで、`import mist` が可能になります。
+- `mist/core.py`: C FFI definitions and the `MistNode` class
+- `mist/transform.py`: Utilities for position synchronization
+
+## Usage
+
+Add this directory to `PYTHONPATH`, then import the package:
 
 ```python
 import sys
-import os
-# アプリケーションから直接読み込む場合の例
-sys.path.append(os.path.abspath("path/to/mistlib/wrappers/python"))
+sys.path.append("path/to/mistlib-examples/wrappers/python")
 from mist import MistNode
 ```
 
-動作例については、ルートディレクトリの [examples/python](../../examples/python) を参照してください。
-負荷試験などのテストについては [tests/python](../../tests/python) を参照してください。
+See [examples/python](../../examples/python) for working code.

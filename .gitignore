@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / build output
+node_modules/
+dist/
+
+# mistlib-dev から取得した成果物 (scripts/sync-mistlib.sh)
+/.mistlib-dev/
+/target/
+/mistlib-wasm/
+/wrappers/unity/MistLib/Runtime/Plugins/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+id_rsa*
+credentials*.json
+
+# Logs
+*.log
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+*.csproj
+*.unityproj
+*.sln
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

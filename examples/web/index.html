@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MistLib Web Metaverse</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .glass-panel {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .status-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .highlight {
+            color: #4ade80;
+        }
+
+        #controls-help {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .key {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin: 0 2px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="ui-overlay">
+        <div class="glass-panel">
+            <div class="status-header">Identity</div>
+            <div class="status-value highlight" id="ui-id">Generating...</div>
+        </div>
+        <div class="glass-panel">
+            <div class="status-header">Connection</div>
+            <div class="status-value" id="ui-status">Initializing...</div>
+        </div>
+        <div class="glass-panel">
+            <div class="status-header">Network</div>
+            <div class="status-value" id="ui-peers">Nearby nodes: 0</div>
+        </div>
+    </div>
+    <div id="controls-help" class="glass-panel">
+        <div class="status-header">Controls</div>
+        <span class="key">Click Anywhere</span> to focus | <span class="key"></span>W</span><span
+            class="key">A</span><span class="key">S</span><span class="key">D</span> to move | <span
+            class="key">ESC</span> to release mouse
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { MistNode } from '../../wrappers/web/index.js';
+
+        // --- Utils: SmoothDamp & Transform ---
+        function smoothDamp(current, target, state, smoothTime, dt) {
+            smoothTime = Math.max(0.0001, smoothTime);
+            const omega = 2.0 / smoothTime;
+            const x = omega * dt;
+            const exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
+            const change = current - target;
+            const temp = (state.velocity + omega * change) * dt;
+            state.velocity = (state.velocity - omega * temp) * exp;
+            return target + (change + temp) * exp;
+        }
+
+        class MistTransform {
+            constructor() {
+                this.pos = { x: 0, z: 0 };
+                this.target = { x: 0, z: 0 };
+                this.velX = { velocity: 0 };
+                this.velZ = { velocity: 0 };
+                this.smoothTime = 0.12;
+            }
+            update(x, z) { this.target.x = x; this.target.z = z; }
+            step(dt) {
+                this.pos.x = smoothDamp(this.pos.x, this.target.x, this.velX, this.smoothTime, dt);
+                this.pos.z = smoothDamp(this.pos.z, this.target.z, this.velZ, this.smoothTime, dt);
+                return this.pos;
+            }
+        }
+
+        // --- Avatar Factory ---
+        class Avatar {
+            constructor(scene, loader, isLocal = false) {
+                this.scene = scene;
+                this.isLocal = isLocal;
+                this.root = new THREE.Group();
+                this.model = null;
+                this.mixer = null;
+                this.actions = {};
+                this.transform = new MistTransform();
+                this.isMoving = false;
+                scene.add(this.root);
+
+                const foxUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf';
+                loader.load(foxUrl, (gltf) => {
+                    this.model = gltf.scene;
+                    this.model.scale.set(0.02, 0.02, 0.02);
+                    this.model.traverse(n => { if (n.isMesh) n.castShadow = true; });
+                    this.root.add(this.model);
+                    this.mixer = new THREE.AnimationMixer(this.model);
+                    this.actions.idle = this.mixer.clipAction(gltf.animations[0]);
+                    this.actions.walk = this.mixer.clipAction(gltf.animations[1]);
+                    this.actions.idle.play();
+                });
+            }
+
+            update(dt, x, z, force = false) {
+                const oldX = this.root.position.x;
+                const oldZ = this.root.position.z;
+
+                if (this.isLocal || force) {
+                    this.root.position.set(x, 0, z);
+                    this.transform.pos.x = x;
+                    this.transform.pos.z = z;
+                } else {
+                    this.transform.update(x, z);
+                    const p = this.transform.step(dt);
+                    this.root.position.set(p.x, 0, p.z);
+                }
+
+                const dx = this.root.position.x - oldX;
+                const dz = this.root.position.z - oldZ;
+                const moving = Math.sqrt(dx * dx + dz * dz) / dt > 0.1;
+
+                if (moving && !this.isMoving) {
+                    this.isMoving = true;
+                    if (this.actions.walk && this.actions.idle) {
+                        this.actions.walk.reset().play();
+                        this.actions.idle.crossFadeTo(this.actions.walk, 0.2, true);
+                    }
+                } else if (!moving && this.isMoving) {
+                    this.isMoving = false;
+                    if (this.actions.walk && this.actions.idle) {
+                        this.actions.idle.reset().play();
+                        this.actions.walk.crossFadeTo(this.actions.idle, 0.2, true);
+                    }
+                }
+
+                if (moving) {
+                    this.root.rotation.y = Math.atan2(dx, dz);
+                }
+
+                if (this.mixer) this.mixer.update(dt);
+            }
+
+            destroy() { this.scene.remove(this.root); }
+        }
+
+        // --- Identity & Network ---
+        async function getIdentity() {
+            let pub = sessionStorage.getItem("mist_identity_pub");
+            if (!pub) {
+                const kp = await window.crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+                pub = JSON.stringify(await window.crypto.subtle.exportKey("jwk", kp.publicKey));
+                sessionStorage.setItem("mist_identity_pub", pub);
+            }
+            const jwk = JSON.parse(pub);
+            const hash = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(jwk.x + "|" + jwk.y));
+            return "vk_" + Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 12);
+        }
+
+        const myId = await getIdentity();
+        document.getElementById('ui-id').innerText = myId;
+        const node = new MistNode(myId);
+        await node.init();
+        node.joinRoom("metaverse-lobby");
+        document.getElementById('ui-status').innerText = 'Connected';
+
+        // --- Scene & Camera ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1e1e24);
+        scene.fog = new THREE.FogExp2(0x1e1e24, 0.015);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        scene.add(new THREE.GridHelper(2000, 1000, 0x444444, 0x222222));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const light = new THREE.DirectionalLight(0xffffff, 0.8);
+        light.position.set(20, 40, 20); light.castShadow = true;
+        scene.add(light);
+
+        let camPhi = 0.8, camTheta = 0, camRadius = 8;
+
+        // --- Pointer Lock & Camera Logic ---
+        document.addEventListener('click', () => {
+            document.body.requestPointerLock();
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (document.pointerLockElement === document.body) {
+                camTheta -= e.movementX * 0.005;
+                camPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPhi + e.movementY * 0.005));
+            }
+        });
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // --- World Logic ---
+        const loader = new GLTFLoader();
+        const localPlayer = new Avatar(scene, loader, true);
+        const peers = {}; // id -> Avatar
+        const keys = { w: 0, a: 0, s: 0, d: 0 };
+        window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (k in keys) keys[k] = 1; });
+        window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k in keys) keys[k] = 0; });
+
+        let pX = 0, pZ = 0, lastSync = 0;
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+
+            // Local Movement
+            let vx = 0, vz = 0;
+            if (keys.w) { vx += Math.sin(camTheta); vz += Math.cos(camTheta); }
+            if (keys.s) { vx -= Math.sin(camTheta); vz -= Math.cos(camTheta); }
+            if (keys.a) { vx += Math.sin(camTheta + Math.PI / 2); vz += Math.cos(camTheta + Math.PI / 2); }
+            if (keys.d) { vx += Math.sin(camTheta - Math.PI / 2); vz += Math.cos(camTheta - Math.PI / 2); }
+
+            if (vx || vz) {
+                const mag = Math.sqrt(vx * vx + vz * vz);
+                pX += (vx / mag) * 8 * dt;
+                pZ += (vz / mag) * 8 * dt;
+            }
+            localPlayer.update(dt, pX, pZ);
+
+            // Camera
+            camera.position.set(pX + Math.sin(camTheta) * Math.cos(camPhi) * -camRadius, 1.5 + Math.sin(camPhi) * camRadius, pZ + Math.cos(camTheta) * Math.cos(camPhi) * -camRadius);
+            camera.lookAt(pX, 1.5, pZ);
+
+            // Network
+            const now = performance.now();
+            if (now - lastSync > 100) {
+                node.updatePosition(pX, 0, pZ);
+                const nbs = node.getNeighbors() || [];
+                const currentIds = new Set(nbs.map(n => n.id));
+                for (const id in peers) if (!currentIds.has(id)) { peers[id].destroy(); delete peers[id]; }
+                nbs.forEach(nb => {
+                    if (nb.id !== myId) {
+                        if (!peers[nb.id]) peers[nb.id] = new Avatar(scene, loader);
+                        peers[nb.id].transform.update(nb.x, nb.z);
+                    }
+                });
+                document.getElementById('ui-peers').innerText = 'Nearby nodes: ' + nbs.length;
+                lastSync = now;
+            }
+
+            for (const id in peers) peers[id].update(dt, peers[id].transform.target.x, peers[id].transform.target.z);
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+</body>
+
+</html>

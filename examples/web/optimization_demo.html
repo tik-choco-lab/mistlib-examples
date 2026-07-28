@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MistLib DNVE3 Optimization Demo (3D)</title>
+    <style>
+        :root {
+            --bg: #1e1e24;
+            --text: #ffffff;
+            --panel-bg: rgba(43, 45, 54, 0.85);
+            --brand: #2f8f9d;
+            --danger: #d4574f;
+            --success: #3fae72;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+
+        #canvas-container {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+        }
+
+        .ui-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 320px;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .value {
+            font-weight: bold;
+            color: var(--brand);
+        }
+
+        .value.connected {
+            color: var(--success);
+        }
+
+        .controls {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background: var(--brand);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .legend {
+            margin-top: 16px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        #iframe-container {
+            display: none;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="canvas-container">
+        <!-- 3D Canvas will be auto-appended by Three.js -->
+
+        <div id="instructions">
+            👉 Use WASD to walk. Click inside window to capture mouse to rotate camera (ESC to release).<br>
+            Notice how connections switch dynamically based on distance and direction.
+        </div>
+
+        <div class="ui-panel">
+            <h2>P2P Overlay Stats (3D)</h2>
+            <div class="stat-row">
+                <span>My ID:</span>
+                <span class="value" id="my-id-label"
+                    style="color: #aaa; font-weight: normal; font-size: 12px;">--</span>
+            </div>
+            <div class="stat-row">
+                <span>Total Known Nodes:</span>
+                <span class="value" id="total-nodes">0</span>
+            </div>
+            <div class="stat-row">
+                <span>WebRTC Connections:</span>
+                <span class="value connected" id="connected-nodes">0</span>
+            </div>
+
+            <div class="controls">
+                <button id="spawn-bot">Spawn Bot Simulation (+10)</button>
+                <button id="despawn-bots" class="secondary" style="display:none;">Clear Bots</button>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="circle" style="background: #3498db; border: 2px solid white;"></div> Local Node
+                </div>
+                <div class="legend-item">
+                    <div class="circle" style="background: rgba(255, 255, 255, 0.2);"></div> Distant Node (Not
+                    Connected)
+                </div>
+                <div class="legend-item">
+                    <div class="circle" style="background: #2ecc71; box-shadow: 0 0 10px #2ecc71;"></div> Connected Peer
+                </div>
+                <div class="legend-item" style="margin-top: 8px; margin-left: 2px;">
+                    <div style="width: 20px; height: 2px; background: rgba(46, 204, 113, 0.5);"></div> Active connection
+                </div>
+                <div class="legend-item" style="margin-top: 8px; margin-left: 2px;">
+                    <div style="width: 20px; height: 2px; background: rgba(88, 101, 242, 0.5);"></div> AOI Range
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="iframe-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { MistNode } from '../../wrappers/web/index.js';
+
+        // Settings
+        const ROOM_ID = "optimization-demo-room";
+
+        // Node state
+        const isBot = window.location.hash.includes('bot');
+        const myId = isBot
+            ? `Bot-${Math.random().toString(36).slice(2, 6)}`
+            : `User-${Math.random().toString(36).slice(2, 6)}`;
+
+        // Scale 1.0 = 100 meters, so 40.0 bounds
+        const WORLD_SIZE = 40.0;
+        const AOI_RADIUS = WORLD_SIZE * 0.5;
+
+        // Position (Local variables for the simulation)
+        let myX = isBot ? (Math.random() * WORLD_SIZE - WORLD_SIZE / 2) : 0;
+        let myY = isBot ? (Math.random() * WORLD_SIZE - WORLD_SIZE / 2) : 0; // Using Y as Z for 3D translation
+        let botTargetX = myX;
+        let botTargetY = myY;
+
+        // We store all known network states
+        let knownNodes = new Map(); // id -> {x, y}
+        let connectedPeers = new Set(); // ids
+        let nodeObj = null;
+
+        // Movement mappings
+        const keys = { w: false, a: false, s: false, d: false };
+        const MOVEMENT_SPEED = 0.15;
+
+        // --- Utils: SmoothDamp & Transform ---
+        function smoothDamp(current, target, state, smoothTime, dt) {
+            smoothTime = Math.max(0.0001, smoothTime);
+            const omega = 2.0 / smoothTime;
+            const x = omega * dt;
+            const exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
+            const change = current - target;
+            const temp = (state.velocity + omega * change) * dt;
+            state.velocity = (state.velocity - omega * temp) * exp;
+            return target + (change + temp) * exp;
+        }
+
+        class MistTransform {
+            constructor() {
+                this.pos = { x: 0, z: 0 };
+                this.target = { x: 0, z: 0 };
+                this.velX = { velocity: 0 };
+                this.velZ = { velocity: 0 };
+                this.smoothTime = 0.2;
+            }
+            update(x, z) { this.target.x = x; this.target.z = z; }
+            step(dt) {
+                this.pos.x = smoothDamp(this.pos.x, this.target.x, this.velX, this.smoothTime, dt);
+                this.pos.z = smoothDamp(this.pos.z, this.target.z, this.velZ, this.smoothTime, dt);
+                return this.pos;
+            }
+        }
+
+        // --- Avatar Factory ---
+        class Avatar {
+            constructor(scene, loader, isLocal = false) {
+                this.scene = scene;
+                this.isLocal = isLocal;
+                this.root = new THREE.Group();
+                this.model = null;
+                this.mixer = null;
+                this.actions = {};
+                this.transform = new MistTransform();
+                this.isMoving = false;
+
+                // Add an indicator simple ring under the avatar
+                const ringGeo = new THREE.RingGeometry(0.3, 0.4, 16);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: isLocal ? 0x3498db : 0xaaaaaa,
+                    side: THREE.DoubleSide,
+                    transparent: true, opacity: 0.6
+                });
+                this.ring = new THREE.Mesh(ringGeo, ringMat);
+                this.ring.rotation.x = -Math.PI / 2;
+                this.ring.position.y = 0.05;
+                this.root.add(this.ring);
+
+                scene.add(this.root);
+
+                const foxUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf';
+                loader.load(foxUrl, (gltf) => {
+                    this.model = gltf.scene;
+                    this.model.scale.set(0.02, 0.02, 0.02);
+                    this.model.traverse(n => { if (n.isMesh) n.castShadow = true; });
+                    this.root.add(this.model);
+                    this.mixer = new THREE.AnimationMixer(this.model);
+                    // Standard Fox anims: 0 = Run, 1 = Walk, 2 = Idle (Wait, 0 is Walk or Survey?)
+                    // Fox: 0 = Survey, 1 = Walk, 2 = Run
+                    this.actions.idle = this.mixer.clipAction(gltf.animations[0]);
+                    this.actions.walk = this.mixer.clipAction(gltf.animations[1]);
+                    this.actions.idle.play();
+                });
+            }
+
+            setConnected(isConnected) {
+                if (this.isLocal) return;
+                this.ring.material.color.setHex(isConnected ? 0x2ecc71 : 0xaaaaaa);
+            }
+
+            update(dt, targetX, targetZ, force = false, localX, localZ) {
+                const oldX = this.root.position.x;
+                const oldZ = this.root.position.z;
+
+                if (this.isLocal || force) {
+                    this.root.position.set(targetX, 0, targetZ);
+                    this.transform.pos.x = targetX;
+                    this.transform.pos.z = targetZ;
+                    this.transform.target.x = targetX;
+                    this.transform.target.z = targetZ;
+                } else {
+                    this.transform.update(targetX, targetZ);
+                    const p = this.transform.step(dt);
+                    this.root.position.set(p.x, 0, p.z);
+                }
+
+                // Check visibility based on AOI range
+                if (!this.isLocal && localX !== undefined && localZ !== undefined) {
+                    const distSq = (this.root.position.x - localX) ** 2 + (this.root.position.z - localZ) ** 2;
+                    this.root.visible = distSq <= (AOI_RADIUS * AOI_RADIUS);
+                } else {
+                    this.root.visible = true; // Always show local
+                }
+
+                const dx = this.root.position.x - oldX;
+                const dz = this.root.position.z - oldZ;
+                const moving = Math.sqrt(dx * dx + dz * dz) / dt > 0.5;
+
+                if (moving && !this.isMoving) {
+                    this.isMoving = true;
+                    if (this.actions.walk && this.actions.idle) {
+                        this.actions.walk.reset().play();
+                        this.actions.idle.crossFadeTo(this.actions.walk, 0.2, true);
+                    }
+                } else if (!moving && this.isMoving) {
+                    this.isMoving = false;
+                    if (this.actions.walk && this.actions.idle) {
+                        this.actions.idle.reset().play();
+                        this.actions.walk.crossFadeTo(this.actions.idle, 0.2, true);
+                    }
+                }
+
+                if (moving) {
+                    // Smoothly rotate
+                    const targetAngle = Math.atan2(dx, dz);
+                    // basic angle lerp could be added, but forced set is fine for demo
+                    this.root.rotation.y = targetAngle;
+                }
+
+                if (this.mixer) this.mixer.update(dt);
+            }
+
+            destroy() { this.scene.remove(this.root); }
+        }
+
+        // Setup 3D Variables
+        let scene, camera, renderer, loader, localPlayer;
+        let p3dPeers = {}; // Object mapping id to Avatar
+        let connectionLines = []; // Array of THREE.Line
+        let aoiMesh;
+        const clock = new THREE.Clock();
+        let camPhi = 0.8, camTheta = 0, camRadius = 15;
+
+        // Bot Simulation UI Logic
+        const iframes = [];
+        if (!isBot) {
+            document.getElementById('my-id-label').textContent = myId;
+
+            let spawning = false;
+            document.getElementById('spawn-bot').addEventListener('click', () => {
+                if (spawning) return;
+                spawning = true;
+                const btn = document.getElementById('spawn-bot');
+                const originalText = btn.textContent;
+                btn.textContent = "Spawning Bots...";
+
+                let count = 0;
+                const total = 10;
+                const interval = setInterval(() => {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = window.location.href.split('#')[0] + '#bot';
+                    document.getElementById('iframe-container').appendChild(iframe);
+                    iframes.push(iframe);
+                    count++;
+
+                    if (count >= total) {
+                        clearInterval(interval);
+                        spawning = false;
+                        btn.textContent = originalText;
+                        document.getElementById('despawn-bots').style.display = 'block';
+                    }
+                }, 500); // 500ms delay between spawns
+            });
+
+            document.getElementById('despawn-bots').addEventListener('click', () => {
+                const container = document.getElementById('iframe-container');
+                container.innerHTML = '';
+                iframes.length = 0;
+                document.getElementById('despawn-bots').style.display = 'none';
+            });
+
+            // Set up 3D if not bot
+            setup3D();
+        } else {
+            // Document clean up if bot
+            document.getElementById('ui-panel')?.remove();
+            document.getElementById('instructions')?.remove();
+
+            // Simple bot wandering logic
+            setInterval(() => {
+                if (Math.random() < 0.2) {
+                    botTargetX = Math.random() * WORLD_SIZE - WORLD_SIZE / 2;
+                    botTargetY = Math.random() * WORLD_SIZE - WORLD_SIZE / 2;
+                }
+            }, 3000);
+        }
+
+        function setup3D() {
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e1e24);
+            scene.fog = new THREE.FogExp2(0x1e1e24, 0.02);
+
+            const container = document.getElementById('canvas-container');
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Ground grid
+            const grid = new THREE.GridHelper(WORLD_SIZE, Math.floor(WORLD_SIZE), 0x444444, 0x222222);
+            scene.add(grid);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light = new THREE.DirectionalLight(0xffffff, 0.8);
+            light.position.set(20, 40, 20);
+            light.castShadow = true;
+            scene.add(light);
+
+            // AOI Mesh
+            const ringGeo = new THREE.RingGeometry(AOI_RADIUS - 0.2, AOI_RADIUS, 64);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x2f8f9d, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
+            aoiMesh = new THREE.Mesh(ringGeo, ringMat);
+            aoiMesh.rotation.x = -Math.PI / 2;
+            aoiMesh.position.y = 0.02; // Slightly above ground
+            scene.add(aoiMesh);
+
+            loader = new GLTFLoader();
+            localPlayer = new Avatar(scene, loader, true);
+
+            // Inputs
+            window.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                if (keys.hasOwnProperty(k) || k.startsWith('arrow')) {
+                    if (k === 'arrowup') keys.w = true;
+                    if (k === 'arrowdown') keys.s = true;
+                    if (k === 'arrowleft') keys.a = true;
+                    if (k === 'arrowright') keys.d = true;
+                    if (keys.hasOwnProperty(k)) keys[k] = true;
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                const k = e.key.toLowerCase();
+                if (keys.hasOwnProperty(k) || k.startsWith('arrow')) {
+                    if (k === 'arrowup') keys.w = false;
+                    if (k === 'arrowdown') keys.s = false;
+                    if (k === 'arrowleft') keys.a = false;
+                    if (k === 'arrowright') keys.d = false;
+                    if (keys.hasOwnProperty(k)) keys[k] = false;
+                }
+            });
+
+            // Camera Controls
+            document.getElementById('canvas-container').addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') document.body.requestPointerLock();
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (document.pointerLockElement === document.body) {
+                    camTheta -= e.movementX * 0.005;
+                    camPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPhi + e.movementY * 0.005));
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Initialize Network Function
+        async function startNetwork() {
+            nodeObj = new MistNode(myId);
+            await nodeObj.init();
+
+            // Override limits to make topology changes faster for demo purposes
+            let config = nodeObj.getConfig();
+            config.maxConnectionCount = 5; // very tight connection limits forces active balancing
+            config.aoiRange = AOI_RADIUS; // Use our AOI radius constant
+            nodeObj.setConfig(config);
+
+            nodeObj.joinRoom(ROOM_ID);
+
+            // Loop to update our position and sync states
+            setInterval(() => {
+                // Sync our position to network
+                nodeObj.updatePosition(myX, myY, 0);
+
+                // Get network vision
+                const allNodes = nodeObj.getAllNodes() || [];
+                const neighbors = nodeObj.getNeighbors() || [];
+
+                knownNodes.clear();
+                for (let n of allNodes) {
+                    if (n.id !== myId && n.position) {
+                        knownNodes.set(n.id, { x: n.position.x, y: n.position.y }); // Mist's Y maps to our 3D Z
+                    }
+                }
+
+                connectedPeers.clear();
+                for (let nh of neighbors) {
+                    if (nh.id !== myId) {
+                        connectedPeers.add(nh.id);
+                        if (nh.position) knownNodes.set(nh.id, { x: nh.position.x, y: nh.position.y });
+                    }
+                }
+
+                if (!isBot) {
+                    document.getElementById('total-nodes').textContent = knownNodes.size + 1;
+                    document.getElementById('connected-nodes').textContent = connectedPeers.size;
+                }
+            }, 500);
+        }
+
+        // Render & Logic loop
+        function loop() {
+            requestAnimationFrame(loop);
+            const dt = clock.getDelta();
+
+            // Movement logic
+            if (!isBot) {
+                let vx = 0, vz = 0;
+                if (keys.w) { vx += Math.sin(camTheta); vz += Math.cos(camTheta); }
+                if (keys.s) { vx -= Math.sin(camTheta); vz -= Math.cos(camTheta); }
+                if (keys.a) { vx += Math.sin(camTheta + Math.PI / 2); vz += Math.cos(camTheta + Math.PI / 2); }
+                if (keys.d) { vx += Math.sin(camTheta - Math.PI / 2); vz += Math.cos(camTheta - Math.PI / 2); }
+
+                if (vx || vz) {
+                    const mag = Math.sqrt(vx * vx + vz * vz);
+                    myX += (vx / mag) * 15 * dt;  // Speed
+                    myY += (vz / mag) * 15 * dt;
+                }
+
+                myX = Math.max(-WORLD_SIZE / 2, Math.min(WORLD_SIZE / 2, myX));
+                myY = Math.max(-WORLD_SIZE / 2, Math.min(WORLD_SIZE / 2, myY));
+            } else {
+                const dx = botTargetX - myX;
+                const dy = botTargetY - myY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0.1) {
+                    myX += (dx / dist) * (MOVEMENT_SPEED * 8.0 * dt); // Bots move slower
+                    myY += (dy / dist) * (MOVEMENT_SPEED * 8.0 * dt);
+                }
+            }
+
+            // 3D Rendering (Only for main window, not iframes)
+            if (!isBot && scene && camera) {
+                localPlayer.update(dt, myX, myY, false);
+
+                // Update AOI Mesh Position
+                aoiMesh.position.x = myX;
+                aoiMesh.position.z = myY;
+
+                // Sync peers with 3D scene
+                const currentIds = new Set(knownNodes.keys());
+                for (const id in p3dPeers) {
+                    if (!currentIds.has(id)) {
+                        p3dPeers[id].destroy();
+                        delete p3dPeers[id];
+                    }
+                }
+
+                for (let [id, pos] of knownNodes.entries()) {
+                    if (!p3dPeers[id]) p3dPeers[id] = new Avatar(scene, loader);
+
+                    const isConnected = connectedPeers.has(id);
+                    p3dPeers[id].setConnected(isConnected);
+
+                    // The avatar update handles interpolating to pos.x, pos.y and animating
+                    p3dPeers[id].update(dt, pos.x, pos.y, false, myX, myY);
+                }
+
+                // Update connection visual lines
+                // Clean up old lines
+                for (let line of connectionLines) scene.remove(line);
+                connectionLines = [];
+
+                const localVec = new THREE.Vector3(myX, 0.5, myY);
+                for (const peerId of connectedPeers) {
+                    const avatar = p3dPeers[peerId];
+                    if (avatar && avatar.root.visible) {
+                        const targetVec = new THREE.Vector3(avatar.root.position.x, 0.5, avatar.root.position.z);
+                        // Draw line
+                        const lineGeo = new THREE.BufferGeometry().setFromPoints([localVec, targetVec]);
+                        const lineMat = new THREE.LineBasicMaterial({ color: 0x2ecc71, linewidth: 2, transparent: true, opacity: 0.8 });
+                        const line = new THREE.Line(lineGeo, lineMat);
+                        scene.add(line);
+                        connectionLines.push(line);
+                    }
+                }
+
+                // Follow camera
+                camera.position.set(myX + Math.sin(camTheta) * Math.cos(camPhi) * -camRadius,
+                    2.0 + Math.sin(camPhi) * camRadius,
+                    myY + Math.cos(camTheta) * Math.cos(camPhi) * -camRadius);
+                camera.lookAt(myX, 2.0, myY);
+
+                renderer.render(scene, camera);
+            }
+        }
+
+        startNetwork();
+        requestAnimationFrame(loop);
+
+    </script>
+</body>
+
+</html>

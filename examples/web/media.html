@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MistLib Media Demo</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(17, 24, 39, 0.82);
+      --panel-strong: rgba(15, 23, 42, 0.96);
+      --line: rgba(148, 163, 184, 0.2);
+      --text: #e5eefc;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 30%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 24%),
+        linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    }
+
+    .page {
+      width: min(1200px, calc(100% - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-self: start;
+      position: sticky;
+      top: 24px;
+    }
+
+    .content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .desc {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input,
+    button,
+    select {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(96, 165, 250, 0.45);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: rgba(96, 165, 250, 0.45);
+    }
+
+    button.success {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+    }
+
+    button.warn {
+      background: linear-gradient(135deg, #d97706, #b45309);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat .value {
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .video-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      min-height: 220px;
+    }
+
+    .video-card.clickable {
+      cursor: zoom-in;
+    }
+
+    .video-card.clickable::after {
+      content: 'Click to enlarge';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(2, 6, 23, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--muted);
+      font-size: 11px;
+      pointer-events: none;
+    }
+
+    .video-card video,
+    .video-card audio {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #020617;
+    }
+
+    .video-card.audio-only {
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .audio-only .audio-placeholder {
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .video-card.ended,
+    .video-card.empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 180px;
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.84)),
+        radial-gradient(circle at top, rgba(245, 158, 11, 0.14), transparent 45%);
+    }
+
+    .video-card.ended {
+      border-style: dashed;
+    }
+
+    .card-message {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 260px;
+    }
+
+    .card-message strong {
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .badge.warn {
+      border-color: rgba(245, 158, 11, 0.28);
+      color: #fde68a;
+    }
+
+    .badge {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      background: rgba(2, 6, 23, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .log {
+      min-height: 180px;
+      max-height: 260px;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, 0.55);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+    }
+
+    .viewer {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+    }
+
+    .viewer.open {
+      display: flex;
+    }
+
+    .viewer-panel {
+      width: min(1200px, 100%);
+      height: min(88vh, 820px);
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.98);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .viewer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(2, 6, 23, 0.55);
+    }
+
+    .viewer-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .viewer-title strong {
+      font-size: 16px;
+    }
+
+    .viewer-title span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .viewer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-stage {
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top, rgba(96, 165, 250, 0.12), transparent 32%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0.95), rgba(15, 23, 42, 0.98));
+      padding: 16px;
+    }
+
+    .viewer-stage video,
+    .viewer-stage audio {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: #000;
+      border-radius: 16px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.65);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .dot.ok {
+      background: var(--accent-2);
+    }
+
+    @media (max-width: 960px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <aside class="panel sidebar">
+      <div>
+        <div class="eyebrow">MistLib WebRTC Media</div>
+        <h1 class="title">Media demo</h1>
+        <p class="desc">`wrapper/web` の media API を使って、同じ room に参加したブラウザ同士でカメラ・マイク・画面共有を行うサンプルです。</p>
+      </div>
+
+      <div class="stack">
+        <div class="field">
+          <label for="roomId">Room ID</label>
+          <input id="roomId" value="media-demo-room" />
+        </div>
+        <div class="field">
+          <label for="signalingUrl">Signaling URL (optional)</label>
+          <input id="signalingUrl" value="" placeholder="leave blank for default Nostr signaling" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="joinBtn" class="primary">Join room</button>
+        <button id="leaveBtn" class="danger" disabled>Leave</button>
+      </div>
+
+      <div class="row">
+        <button id="startCamBtn" class="success" disabled>Start camera</button>
+        <button id="startMicBtn" class="success" disabled>Start mic</button>
+      </div>
+
+      <div class="row">
+        <button id="startScreenBtn" class="success" disabled>Share screen</button>
+        <button id="changeScreenBtn" class="primary" disabled>Change shared screen</button>
+        <button id="stopScreenBtn" class="warn" disabled>Stop share</button>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="shareScreenAudio" type="checkbox" checked style="width:auto; margin-right:8px;" />
+          Share system audio when the browser allows it
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="stopCamBtn" class="warn" disabled>Stop camera</button>
+        <button id="stopMicBtn" class="warn" disabled>Stop mic</button>
+      </div>
+
+      <div class="row">
+        <button id="toggleCamBtn" disabled>Toggle video</button>
+        <button id="toggleMicBtn" disabled>Toggle audio</button>
+      </div>
+
+      <div class="row">
+        <button id="toggleScreenBtn" disabled>Disable screen</button>
+      </div>
+
+      <div class="stat">
+        <div class="label">Node ID</div>
+        <div class="value" id="nodeId">not initialized</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Status</div>
+        <div class="value" id="statusText">idle</div>
+      </div>
+
+      <div class="pill"><span class="dot" id="statusDot"></span><span id="statusPill">disconnected</span></div>
+
+      <div class="hint">
+        別タブを2つ開いて同じ room に参加すると、remote track の受信を確認できます。
+      </div>
+    </aside>
+
+    <main class="panel content">
+      <section class="stack">
+        <div>
+          <div class="eyebrow">Local / Remote Streams</div>
+          <h2>Media surfaces</h2>
+        </div>
+        <div class="video-grid" id="videoGrid"></div>
+      </section>
+
+      <section class="stack">
+        <div>
+          <div class="eyebrow">Events</div>
+          <h2>Log</h2>
+        </div>
+        <div class="log" id="log"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="viewer" id="screenViewer" aria-hidden="true">
+    <div class="viewer-panel">
+      <div class="viewer-bar">
+        <div class="viewer-title">
+          <strong id="viewerTitle">Screen viewer</strong>
+          <span id="viewerMeta">Click fullscreen for a larger preview.</span>
+        </div>
+        <div class="viewer-actions">
+          <button id="viewerFullscreenBtn" class="primary">Fullscreen</button>
+          <button id="viewerCloseBtn" class="danger">Close</button>
+        </div>
+      </div>
+      <div class="viewer-stage" id="viewerStage"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { MistNode, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
+
+    const roomIdInput = document.getElementById('roomId');
+    const signalingUrlInput = document.getElementById('signalingUrl');
+    const joinBtn = document.getElementById('joinBtn');
+    const leaveBtn = document.getElementById('leaveBtn');
+    const startCamBtn = document.getElementById('startCamBtn');
+    const startMicBtn = document.getElementById('startMicBtn');
+    const startScreenBtn = document.getElementById('startScreenBtn');
+    const changeScreenBtn = document.getElementById('changeScreenBtn');
+    const stopScreenBtn = document.getElementById('stopScreenBtn');
+    const stopCamBtn = document.getElementById('stopCamBtn');
+    const stopMicBtn = document.getElementById('stopMicBtn');
+    const toggleCamBtn = document.getElementById('toggleCamBtn');
+    const toggleMicBtn = document.getElementById('toggleMicBtn');
+    const toggleScreenBtn = document.getElementById('toggleScreenBtn');
+    const shareScreenAudioInput = document.getElementById('shareScreenAudio');
+    const nodeIdEl = document.getElementById('nodeId');
+    const statusTextEl = document.getElementById('statusText');
+    const statusDotEl = document.getElementById('statusDot');
+    const statusPillEl = document.getElementById('statusPill');
+    const videoGrid = document.getElementById('videoGrid');
+    const logEl = document.getElementById('log');
+    const screenViewer = document.getElementById('screenViewer');
+    const viewerStage = document.getElementById('viewerStage');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerMeta = document.getElementById('viewerMeta');
+    const viewerFullscreenBtn = document.getElementById('viewerFullscreenBtn');
+    const viewerCloseBtn = document.getElementById('viewerCloseBtn');
+
+    const TRACK_SPECS = {
+      video: { trackId: 'local-video', label: 'camera', cardKind: 'video', cardKey: 'video' },
+      audio: { trackId: 'local-audio', label: 'microphone', cardKind: 'audio', cardKey: 'audio' },
+      screen: { trackId: 'local-screen', label: 'screen share', cardKind: 'screen', cardKey: 'screen' },
+      screenAudio: { trackId: 'local-screen-audio', label: 'system audio', cardKind: 'audio', cardKey: 'screenAudio' },
+    };
+
+    const localState = {
+      node: null,
+      joined: false,
+      tracks: {
+        video: null,
+        audio: null,
+        screen: null,
+        screenAudio: null,
+      },
+      localCards: new Map(),
+      remoteCards: new Map(),
+      remoteSlots: new Map(),
+      transientCards: new Map(),
+      viewer: {
+        sourceKey: null,
+        media: null,
+      },
+    };
+
+    function log(message) {
+      const line = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logEl.textContent = `${line}\n${logEl.textContent}`.trim();
+    }
+
+    function randomId() {
+      const bytes = crypto.getRandomValues(new Uint8Array(6));
+      return `web_${Array.from(bytes).map(v => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+
+    function setStatus(text, connected = false) {
+      statusTextEl.textContent = text;
+      statusPillEl.textContent = connected ? 'connected' : text;
+      statusDotEl.classList.toggle('ok', connected);
+    }
+
+    function getTrack(slot) {
+      return localState.tracks[slot] ?? null;
+    }
+
+    function setTrack(slot, track) {
+      localState.tracks[slot] = track ?? null;
+    }
+
+    function clearTransientCards() {
+      for (const timer of localState.transientCards.values()) {
+        clearTimeout(timer);
+      }
+      localState.transientCards.clear();
+    }
+
+    function renderEmptyState() {
+      const hasVisibleCards = [...videoGrid.children].some((child) => !child.dataset.emptyState);
+      const existing = videoGrid.querySelector('[data-empty-state="true"]');
+
+      if (hasVisibleCards) {
+        existing?.remove();
+        return;
+      }
+
+      if (existing) return;
+
+      const card = document.createElement('article');
+      card.className = 'video-card empty-state';
+      card.dataset.emptyState = 'true';
+      card.innerHTML = `
+        <div class="card-message">
+          <strong>No media yet</strong>
+          <span>Join the same room in another tab, then start camera, mic, or screen share to preview local and remote tracks here.</span>
+        </div>
+      `;
+      videoGrid.appendChild(card);
+    }
+
+    function isScreenShareActive() {
+      return Boolean(getTrack('screen'));
+    }
+
+    function classifyRemoteTrack(kind, track) {
+      const label = (track?.label ?? '').toLowerCase();
+      const isScreenVideo = kind === 'video' && /screen|window|display|monitor|obs|share/.test(label);
+      const isScreenAudio = kind === 'audio' && /system|screen|window|display|monitor|tab|share|obs/.test(label);
+      const remoteKind = isScreenVideo ? 'screen' : kind;
+      const slot = isScreenVideo ? 'screen' : isScreenAudio ? 'screenAudio' : kind;
+      return {
+        remoteKind,
+        slot,
+        label: remoteKind === 'screen' ? 'screen' : slot === 'screenAudio' ? 'system audio' : remoteKind,
+      };
+    }
+
+    function setButtons() {
+      const { joined, tracks } = localState;
+      joinBtn.disabled = joined;
+      leaveBtn.disabled = !joined;
+      startCamBtn.disabled = !joined || !!tracks.video;
+      startMicBtn.disabled = !joined || !!tracks.audio;
+      startScreenBtn.disabled = !joined || !!tracks.screen;
+      changeScreenBtn.disabled = !joined || !tracks.screen;
+      stopScreenBtn.disabled = !joined || !tracks.screen;
+      stopCamBtn.disabled = !joined || !tracks.video;
+      stopMicBtn.disabled = !joined || !tracks.audio;
+      toggleCamBtn.disabled = !joined || !tracks.video;
+      toggleMicBtn.disabled = !joined || !tracks.audio;
+      toggleScreenBtn.disabled = !joined || !tracks.screen;
+      toggleCamBtn.textContent = tracks.video?.enabled === false ? 'Enable video' : 'Disable video';
+      toggleMicBtn.textContent = tracks.audio?.enabled === false ? 'Enable audio' : 'Disable audio';
+      const isScreenEnabled = tracks.screen?.enabled !== false || tracks.screenAudio?.enabled !== false;
+      toggleScreenBtn.textContent = isScreenEnabled ? 'Pause share' : 'Resume share';
+    }
+
+    function isViewerOpen() {
+      return screenViewer.classList.contains('open');
+    }
+
+    function closeViewer() {
+      if (localState.viewer.media) {
+        try {
+          localState.viewer.media.pause?.();
+        } catch (_) {
+          // ignore
+        }
+      }
+      viewerStage.innerHTML = '';
+      screenViewer.classList.remove('open');
+      screenViewer.setAttribute('aria-hidden', 'true');
+      localState.viewer = { sourceKey: null, media: null };
+    }
+
+    function openViewer({ key, title, meta, sourceMedia, muted = false }) {
+      closeViewer();
+
+      const tagName = sourceMedia.tagName?.toLowerCase() === 'audio' ? 'audio' : 'video';
+      const media = document.createElement(tagName);
+      media.autoplay = true;
+      media.playsInline = true;
+      media.controls = true;
+      media.muted = muted;
+      if (tagName === 'video') {
+        media.srcObject = sourceMedia.srcObject;
+      } else {
+        media.srcObject = sourceMedia.srcObject;
+      }
+
+      viewerStage.appendChild(media);
+      viewerTitle.textContent = title;
+      viewerMeta.textContent = meta;
+      screenViewer.classList.add('open');
+      screenViewer.setAttribute('aria-hidden', 'false');
+      localState.viewer = { sourceKey: key, media };
+    }
+
+    async function openFullscreenViewer() {
+      const target = localState.viewer.media ?? screenViewer.querySelector('.viewer-panel');
+      if (!target?.requestFullscreen) return;
+      try {
+        await target.requestFullscreen();
+      } catch (error) {
+        log(`Fullscreen failed: ${error.message ?? error}`);
+      }
+    }
+
+    function bindCardViewer(entry, { key, title, meta, muted = false }) {
+      const isVideoCard = entry.media.tagName?.toLowerCase() === 'video';
+      if (!isVideoCard) {
+        entry.card.classList.remove('clickable');
+        entry.card.onclick = null;
+        return;
+      }
+      entry.card.classList.add('clickable');
+      entry.card.onclick = () => openViewer({ key, title, meta, sourceMedia: entry.media, muted });
+    }
+
+    function makeCard(id, label, kind, isLocal = false) {
+      const card = document.createElement('article');
+      card.className = 'video-card';
+      card.dataset.cardId = id;
+
+      const media = kind === 'audio' ? document.createElement('audio') : document.createElement('video');
+      media.autoplay = true;
+      media.playsInline = true;
+      if (isLocal) {
+        media.muted = true;
+      }
+      if (kind === 'video' || kind === 'screen') {
+        media.controls = false;
+      } else {
+        card.classList.add('audio-only');
+        const placeholder = document.createElement('div');
+        placeholder.className = 'audio-placeholder';
+        placeholder.innerHTML = '<strong>Audio track</strong><br />再生中はブラウザが出力します';
+        card.appendChild(placeholder);
+        media.style.display = 'none';
+      }
+
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = `${isLocal ? 'local' : 'remote'} · ${label} · ${kind}`;
+
+      card.appendChild(media);
+      card.appendChild(badge);
+      videoGrid.appendChild(card);
+      renderEmptyState();
+      return { card, media, badge };
+    }
+
+    function ensureRemoteCard(fromId, trackId, kind, label = fromId) {
+      const key = `${fromId}:${trackId}`;
+      if (localState.remoteCards.has(key)) {
+        return localState.remoteCards.get(key);
+      }
+      const entry = makeCard(key, label, kind, false);
+      entry.card.dataset.remoteKind = kind;
+      localState.remoteCards.set(key, entry);
+      return entry;
+    }
+
+    function removeRemoteCard(key) {
+      const entry = localState.remoteCards.get(key);
+      if (!entry) return;
+      const slot = entry.card.dataset.remoteSlot;
+      if (slot) {
+        const slotKey = `${entry.card.dataset.remoteFrom}:${slot}`;
+        if (localState.remoteSlots.get(slotKey) === key) {
+          localState.remoteSlots.delete(slotKey);
+        }
+      }
+      removeCard(localState.remoteCards, key);
+    }
+
+    function ensureLocalCard(slot, label, cardKind) {
+      const key = `local:${slot}`;
+      if (localState.localCards.has(key)) {
+        return localState.localCards.get(key);
+      }
+      const entry = makeCard(key, `me · ${label}`, cardKind, true);
+      localState.localCards.set(key, entry);
+      return entry;
+    }
+
+    function removeCard(map, key) {
+      const entry = map.get(key);
+      if (!entry) return;
+      if (localState.viewer.sourceKey === key) {
+        closeViewer();
+      }
+      entry.card.remove();
+      map.delete(key);
+      renderEmptyState();
+    }
+
+    function clearTransientCard(key) {
+      const timer = localState.transientCards.get(key);
+      if (timer) {
+        clearTimeout(timer);
+        localState.transientCards.delete(key);
+      }
+    }
+
+    function showRemoteTrackEnded(fromId, trackId, kind) {
+      const cardKey = `${fromId}:${trackId}`;
+      const entry = localState.remoteCards.get(cardKey);
+
+      if (!entry) {
+        renderEmptyState();
+        return;
+      }
+
+      localState.remoteCards.delete(cardKey);
+      clearTransientCard(cardKey);
+      const endedKind = entry.card.dataset.remoteKind || kind;
+      const endedSlot = entry.card.dataset.remoteSlot;
+      if (endedSlot) {
+        const slotKey = `${fromId}:${endedSlot}`;
+        if (localState.remoteSlots.get(slotKey) === cardKey) {
+          localState.remoteSlots.delete(slotKey);
+        }
+      }
+
+      try {
+        entry.media.pause?.();
+      } catch (_) {
+        // ignore
+      }
+      entry.media.srcObject = null;
+      entry.card.classList.remove('audio-only');
+      entry.card.classList.add('ended');
+      entry.card.innerHTML = '';
+
+      const message = document.createElement('div');
+      message.className = 'card-message';
+      message.innerHTML = `
+        <strong>${fromId}</strong>
+        <span>${endedKind === 'screen' ? 'Screen share ended.' : `${endedKind} track ended.`}</span>
+        <span>この表示は数秒後に自動で消えます。</span>
+      `;
+
+      const badge = document.createElement('div');
+      badge.className = 'badge warn';
+      badge.textContent = `remote · ${fromId} · ended`;
+
+      entry.card.appendChild(message);
+      entry.card.appendChild(badge);
+
+      const timer = window.setTimeout(() => {
+        entry.card.remove();
+        localState.transientCards.delete(cardKey);
+        renderEmptyState();
+      }, 4500);
+
+      localState.transientCards.set(cardKey, timer);
+      renderEmptyState();
+    }
+
+    function cleanupDeadRemoteCards() {
+      for (const [key, entry] of [...localState.remoteCards.entries()]) {
+        const stream = entry.media.srcObject;
+        if (!(stream instanceof MediaStream)) {
+          continue;
+        }
+        const tracks = stream.getTracks();
+        if (tracks.length === 0 || tracks.every((track) => track.readyState === 'ended')) {
+          removeRemoteCard(key);
+        }
+      }
+    }
+
+    function attachTrackEnded(track, handler) {
+      const onEnded = () => handler();
+      track.addEventListener('ended', onEnded, { once: true });
+    }
+
+    function attachLocalPreview(slot, track) {
+      const spec = TRACK_SPECS[slot];
+      const card = ensureLocalCard(spec.cardKey, spec.label, spec.cardKind);
+      localState.node.attachMedia(card.media, track);
+      bindCardViewer(card, {
+        key: `local:${spec.cardKey}`,
+        title: `Local ${spec.label}`,
+        meta: spec.cardKind === 'screen' ? 'Local screen-share preview' : 'Local video preview',
+        muted: true,
+      });
+    }
+
+    function registerOrReplaceTrack(slot, track, options = {}) {
+      const spec = TRACK_SPECS[slot];
+      const previous = getTrack(slot);
+
+      if (previous && previous.id !== track.id) {
+        localState.node.replaceLocalTrack(spec.trackId, track, {
+          publish: true,
+          stopPrevious: false,
+          ...options,
+        });
+        previous.stop();
+        log(`Replaced local ${slot} track: ${previous.id} -> ${track.id}`);
+      } else {
+        localState.node.registerLocalTrack(spec.trackId, track, { publish: true, ...options });
+        log(`Started local ${slot} track: ${track.id}`);
+      }
+
+      setTrack(slot, track);
+      attachLocalPreview(slot, track);
+    }
+
+    async function startScreenShare({ replace = false } = {}) {
+      if (!localState.node) return;
+      if (!replace && isScreenShareActive()) return;
+
+      const stream = await localState.node.createDisplayMedia({
+        video: true,
+        audio: shareScreenAudioInput.checked,
+      });
+
+      const screenTrack = stream.getVideoTracks()[0];
+      const screenAudioTrack = stream.getAudioTracks()[0] ?? null;
+
+      if (!screenTrack) {
+        throw new Error('No screen video track available');
+      }
+
+      registerOrReplaceTrack('screen', screenTrack);
+      attachTrackEnded(screenTrack, () => {
+        if (getTrack('screen')?.id !== screenTrack.id) return;
+        log('screen share ended locally');
+        stopScreenShare();
+      });
+
+      if (screenAudioTrack) {
+        registerOrReplaceTrack('screenAudio', screenAudioTrack);
+        attachTrackEnded(screenAudioTrack, () => {
+          if (getTrack('screenAudio')?.id !== screenAudioTrack.id) return;
+          stopTrack('screenAudio', { stopBrowserTrack: false, logStop: true });
+        });
+      } else if (getTrack('screenAudio')) {
+        stopTrack('screenAudio');
+      }
+
+      setButtons();
+    }
+
+    function stopScreenShare() {
+      stopTrack('screenAudio', { logStop: false });
+      stopTrack('screen', { logStop: true });
+    }
+
+    async function startTrack(kind) {
+      if (!localState.node) return;
+      if (kind === 'screen') {
+        await startScreenShare();
+        return;
+      }
+      if (getTrack(kind)) return;
+
+      let stream;
+      let track;
+      const constraints = kind === 'video'
+        ? { video: true, audio: false }
+        : { video: false, audio: true };
+      stream = await localState.node.createLocalMedia(constraints);
+      track = kind === 'video' ? stream.getVideoTracks()[0] : stream.getAudioTracks()[0];
+
+      if (!track) {
+        throw new Error(`No ${kind} track available`);
+      }
+
+      registerOrReplaceTrack(kind, track);
+      attachTrackEnded(track, () => {
+        if (getTrack(kind)?.id !== track.id) return;
+        log(`${kind} track ended locally`);
+        stopTrack(kind);
+      });
+
+      setButtons();
+    }
+
+    function stopTrack(kind, options = {}) {
+      const {
+        stopBrowserTrack = true,
+        logStop = true,
+      } = options;
+      const track = getTrack(kind);
+      if (!track || !localState.node) return;
+      const spec = TRACK_SPECS[kind];
+      localState.node.removeLocalTrack(spec.trackId);
+      if (stopBrowserTrack) {
+        track.stop();
+      }
+      setTrack(kind, null);
+      removeCard(localState.localCards, `local:${spec.cardKey}`);
+      if (logStop) {
+        log(`Stopped local ${kind} track`);
+      }
+      setButtons();
+    }
+
+    function toggleTrack(kind) {
+      if (kind === 'screen') {
+        const screenTrack = getTrack('screen');
+        const screenAudioTrack = getTrack('screenAudio');
+        if ((!screenTrack && !screenAudioTrack) || !localState.node) return;
+        const next = !((screenTrack?.enabled ?? false) || (screenAudioTrack?.enabled ?? false));
+        if (screenTrack) {
+          localState.node.setLocalTrackEnabled(TRACK_SPECS.screen.trackId, next);
+          screenTrack.enabled = next;
+        }
+        if (screenAudioTrack) {
+          localState.node.setLocalTrackEnabled(TRACK_SPECS.screenAudio.trackId, next);
+          screenAudioTrack.enabled = next;
+        }
+        log(`${next ? 'Resumed' : 'Paused'} local screen share`);
+        setButtons();
+        return;
+      }
+
+      const track = getTrack(kind);
+      if (!track || !localState.node) return;
+      const next = !track.enabled;
+      localState.node.setLocalTrackEnabled(TRACK_SPECS[kind].trackId, next);
+      track.enabled = next;
+      log(`${next ? 'Enabled' : 'Disabled'} local ${kind}`);
+      setButtons();
+    }
+
+    async function changeScreenShare() {
+      if (!isScreenShareActive()) return;
+      try {
+        await startScreenShare({ replace: true });
+        log('Changed shared screen surface');
+      } catch (error) {
+        console.error(error);
+        log(`Screen change failed: ${error.message ?? error}`);
+      }
+    }
+
+    async function joinRoom() {
+      const nodeId = randomId();
+      const signalingUrl = signalingUrlInput.value.trim();
+      const roomId = roomIdInput.value.trim() || 'media-demo-room';
+
+      // Blank field: use the default Nostr signaling config. Only fall back
+      // to legacy WebSocket signaling if the user explicitly enters a URL.
+      const node = signalingUrl ? new MistNode(nodeId, signalingUrl) : new MistNode(nodeId);
+      await node.init();
+      node.joinRoom(roomId);
+
+      node.onMediaEvent((eventType, payload) => {
+        if (eventType === MEDIA_EVENT_TRACK_ADDED) {
+          const { fromId, trackId, kind, track, stream } = payload;
+          clearTransientCard(`${fromId}:${trackId}`);
+          const classification = classifyRemoteTrack(kind, track);
+          const remoteKind = classification.remoteKind;
+          const remoteLabel = remoteKind === 'screen'
+            ? `${fromId} · screen`
+            : classification.slot === 'screenAudio'
+              ? `${fromId} · system audio`
+              : fromId;
+          const slotKey = `${fromId}:${classification.slot}`;
+          const currentKey = `${fromId}:${trackId}`;
+          const previousKey = localState.remoteSlots.get(slotKey);
+          if (previousKey && previousKey !== currentKey) {
+            clearTransientCard(previousKey);
+            removeRemoteCard(previousKey);
+          }
+          const entry = ensureRemoteCard(fromId, trackId, remoteKind, remoteLabel);
+          entry.card.dataset.remoteFrom = fromId;
+          entry.card.dataset.remoteSlot = classification.slot;
+          entry.card.dataset.remoteKind = remoteKind;
+          localState.remoteSlots.set(slotKey, currentKey);
+          localState.node.attachMedia(entry.media, stream ?? track);
+          bindCardViewer(entry, {
+            key: currentKey,
+            title: remoteKind === 'screen' ? `${fromId} screen share` : `${fromId} ${remoteKind}`,
+            meta: remoteKind === 'screen'
+              ? 'Click fullscreen for a full-screen screen-share preview.'
+              : `${fromId} video preview`,
+            muted: false,
+          });
+          log(`Remote ${remoteKind} track added from ${fromId}: ${trackId}`);
+          cleanupDeadRemoteCards();
+        }
+
+        if (eventType === MEDIA_EVENT_TRACK_REMOVED) {
+          const { fromId, trackId, kind } = payload;
+          showRemoteTrackEnded(fromId, trackId, kind);
+          log(`Remote ${kind} track removed from ${fromId}: ${trackId}`);
+          cleanupDeadRemoteCards();
+        }
+      });
+
+      localState.node = node;
+      localState.joined = true;
+      nodeIdEl.textContent = nodeId;
+      setStatus(`joined room: ${roomId}`, true);
+      log(`Joined room ${roomId} as ${nodeId}`);
+      setButtons();
+    }
+
+    function leaveRoom() {
+      if (!localState.node) return;
+
+      stopTrack('video');
+      stopTrack('audio');
+      stopScreenShare();
+      for (const key of [...localState.remoteCards.keys()]) {
+        removeRemoteCard(key);
+      }
+      localState.remoteSlots.clear();
+      clearTransientCards();
+      for (const card of [...videoGrid.children]) {
+        if (card.dataset.emptyState !== 'true') {
+          card.remove();
+        }
+      }
+
+      localState.node.leaveRoom();
+      localState.node = null;
+      localState.joined = false;
+      nodeIdEl.textContent = 'not initialized';
+      setStatus('idle', false);
+      log('Left room');
+      setButtons();
+      renderEmptyState();
+    }
+
+    joinBtn.addEventListener('click', async () => {
+      try {
+        await joinRoom();
+      } catch (error) {
+        console.error(error);
+        setStatus('join failed', false);
+        log(`Join failed: ${error.message ?? error}`);
+      }
+    });
+
+    leaveBtn.addEventListener('click', leaveRoom);
+    viewerCloseBtn.addEventListener('click', () => closeViewer());
+    viewerFullscreenBtn.addEventListener('click', () => openFullscreenViewer());
+    screenViewer.addEventListener('click', (event) => {
+      if (event.target === screenViewer) {
+        closeViewer();
+      }
+    });
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isViewerOpen()) {
+        closeViewer();
+      }
+    });
+    startCamBtn.addEventListener('click', async () => {
+      try {
+        await startTrack('video');
+      } catch (error) {
+        console.error(error);
+        log(`Video start failed: ${error.message ?? error}`);
+      }
+    });
+    startMicBtn.addEventListener('click', async () => {
+      try {
+        await startTrack('audio');
+      } catch (error) {
+        console.error(error);
+        log(`Audio start failed: ${error.message ?? error}`);
+      }
+    });
+    startScreenBtn.addEventListener('click', async () => {
+      try {
+        await startTrack('screen');
+      } catch (error) {
+        console.error(error);
+        log(`Screen share start failed: ${error.message ?? error}`);
+      }
+    });
+    stopCamBtn.addEventListener('click', () => stopTrack('video'));
+    stopMicBtn.addEventListener('click', () => stopTrack('audio'));
+    changeScreenBtn.addEventListener('click', () => changeScreenShare());
+    stopScreenBtn.addEventListener('click', () => stopScreenShare());
+    toggleCamBtn.addEventListener('click', () => toggleTrack('video'));
+    toggleMicBtn.addEventListener('click', () => toggleTrack('audio'));
+    toggleScreenBtn.addEventListener('click', () => toggleTrack('screen'));
+
+    setButtons();
+    setStatus('idle', false);
+    renderEmptyState();
+    window.setInterval(() => cleanupDeadRemoteCards(), 3000);
+    log('Media demo ready');
+  </script>
+</body>
+
+</html>

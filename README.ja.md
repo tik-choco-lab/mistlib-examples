@@ -20,14 +20,24 @@ English: [README.md](README.md)
 ## セットアップ
 
 各ラッパーはビルド済みのエンジンバイナリを必要とします。これらはこのリポジトリには含まれず、
-`scripts/sync-mistlib.sh` でエンジン側リポジトリから取得します (アクセス権が必要です)。
+[mistlib](https://github.com/tik-choco-lab/mistlib) 側で公開されています。
+
+- **Web** — WebAssembly ビルドは npm の
+  [`@tik-choco/mistlib`](https://www.npmjs.com/package/@tik-choco/mistlib)。
+- **Python / Unity** — ネイティブライブラリは
+  [各リリース](https://github.com/tik-choco-lab/mistlib/releases/latest) の
+  `mistlib-native-<platform>-<version>.zip`。
+
+下表のパスへ置くか、エンジンのソースを手元に持っているならスクリプトに任せられます。
 
 ```sh
 cp .env.example .env   # 取得元とブランチを設定
 just sync              # または ./scripts/sync-mistlib.sh
 ```
 
-成果物は各ラッパーが探索するパスへ配置されます (いずれも git 管理外)。
+web のデモは各ページの import map 経由で CDN からエンジンを読むため、ローカルビルドは
+不要です（使いたい場合は import map を `../../mistlib-wasm/pkg/mistlib_wasm.js` に向けて
+ください）。他のラッパーはディスク上の成果物を読みます (いずれも git 管理外)。
 
 | 配置先 | 参照元 |
 | --- | --- |
@@ -58,10 +68,18 @@ just sync              # または ./scripts/sync-mistlib.sh
 
 ## シグナリング
 
-デフォルトのシグナリング方式は Nostr です。既定のリレー設定はラッパーごとに異なります。
+シグナリングは Nostr です。`inviteSalt` と `inviteCode` の両方が一致するピア同士だけが
+互いを見つけられるため、ラッパーは既定値を持ちません。アプリごとに固有の値を設定してください。
 
-- Python / Unity: ローカルリレー `ws://127.0.0.1:7777` を参照するため、リレーを起動するか設定を上書きしてください。
-- Web: `relays` が空のため、エンジン既定のリレーリストが使われます。任意のリレーを使う場合は設定で明示してください。
+```js
+new MistNode(id, { signaling: { mode: "nostr", nostr: {
+  inviteSalt: "my-app", inviteCode: "a-shared-secret",
+} } });
+```
+
+リレーはラッパーごとに異なります。Python と Unity は `ws://127.0.0.1:7777` のローカルリレーを
+参照し、web ラッパーは `relays` を空にしてエンジンが起動時にリレー一覧を取得します。任意の
+リレーを使う場合は設定で明示してください。
 
 ## ライセンス
 

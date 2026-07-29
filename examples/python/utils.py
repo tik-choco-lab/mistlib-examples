@@ -85,9 +85,14 @@ def get_mistlib_config_defaults() -> dict:
     """Load the current MistLib config schema/defaults directly from the Rust engine."""
     try:
         setup_mist_path()
-        from mist import MistNode  # type: ignore
+        from mist import MistNode, default_config  # type: ignore
 
-        node = MistNode("config-schema")
+        # Never joins a room; the invite is only here because the engine validates
+        # the whole config at init.
+        schema_config = default_config()
+        schema_config["signaling"]["nostr"]["inviteSalt"] = "mistlib-example-schema"
+        schema_config["signaling"]["nostr"]["inviteCode"] = "unused"
+        node = MistNode("config-schema", config=schema_config)
         raw = node.get_config()
         data = json.loads(raw) if raw else {}
         return data if isinstance(data, dict) else {}

@@ -18,8 +18,18 @@ namespace MistLib
         public static MistEngine I { get; private set; }
         public string SelfId { get; private set; }
         private const string DefaultNostrRelayUrl = "ws://127.0.0.1:7777";
-        private const string DefaultConfigJson =
-            "{\"signaling\":{\"mode\":\"nostr\",\"nostr\":{\"relays\":[\"ws://127.0.0.1:7777\"],\"discoveryKind\":25049,\"messageKind\":25050,\"ttlSeconds\":60,\"maxClockSkewSeconds\":300,\"inviteSalt\":\"nostr-sig-test-local-salt\",\"inviteCode\":\"dev-invite-001\"}}}";
+        // inviteSalt and inviteCode are deliberately absent. Together they derive
+        // the secret that scopes discovery, so every deployment sharing them shares
+        // one namespace and one admission secret -- shipping defaults here meant
+        // every project built from this wrapper inherited the same pair. Set
+        // InviteSalt and InviteCode below to values unique to your application.
+        private const string InviteSalt = "";
+        private const string InviteCode = "";
+        private static string DefaultConfigJson =>
+            "{\"signaling\":{\"mode\":\"nostr\",\"nostr\":{\"relays\":[\"" + DefaultNostrRelayUrl +
+            "\"],\"discoveryKind\":25049,\"messageKind\":25050,\"ttlSeconds\":60," +
+            "\"maxClockSkewSeconds\":300,\"inviteSalt\":\"" + InviteSalt +
+            "\",\"inviteCode\":\"" + InviteCode + "\"}}}";
         // CIDs are multibase-prefixed base32(varint version + varint codec + varint multihash + sha256 digest),
         // ~59 bytes in practice; this leaves ample margin without over-allocating.
         private const int CidBufferSize = 256;
@@ -56,7 +66,23 @@ namespace MistLib
             SelfId = string.IsNullOrEmpty(_customNodeId) ? Guid.NewGuid().ToString() : _customNodeId;
             if (_useDefaultNostrConfig || !string.IsNullOrWhiteSpace(_configJson))
             {
-                InitWithConfig(SelfId, string.IsNullOrWhiteSpace(_configJson) ? DefaultConfigJson : _configJson);
+                var useBuiltIn = string.IsNullOrWhiteSpace(_configJson);
+                if (useBuiltIn && (InviteSalt.Length == 0 || InviteCode.Length == 0))
+                {
+                    // The engine would reject an empty invite and init_with_config
+                    // would just return false, leaving no clue why nothing connects.
+                    Debug.LogError(
+                        "MistLib: set InviteSalt and InviteCode in MistEngine.cs before using " +
+                        "the built-in Nostr config. Together they derive the secret that decides " +
+                        "who can reach your rooms, so peers sharing them share a namespace -- " +
+                        "which is why no default ships. Alternatively supply your own config JSON.");
+                    return;
+                }
+                if (!InitWithConfig(SelfId, useBuiltIn ? DefaultConfigJson : _configJson))
+                {
+                    Debug.LogError("MistLib: the engine rejected the signaling configuration.");
+                    return;
+                }
             }
             else
             {

@@ -36,6 +36,11 @@ else:
 DEFAULT_NOSTR_RELAY_URL = "ws://127.0.0.1:7777"
 
 
+# `inviteSalt` and `inviteCode` are deliberately absent: together they derive the
+# secret that scopes discovery, so every deployment sharing them shares one
+# namespace and one admission secret. Shipping defaults here meant every app
+# built from this wrapper inherited the same pair. Callers supply their own --
+# _assert_invite_configured refuses to build a config without them.
 def default_config():
     return {
         "signaling": {
@@ -46,11 +51,27 @@ def default_config():
                 "messageKind": 25050,
                 "ttlSeconds": 60,
                 "maxClockSkewSeconds": 300,
-                "inviteSalt": "nostr-sig-test-local-salt",
-                "inviteCode": "dev-invite-001",
             },
         },
     }
+
+
+def _assert_invite_configured(config):
+    signaling = (config or {}).get("signaling") or {}
+    if signaling.get("mode") != "nostr":
+        return
+    nostr = signaling.get("nostr") or {}
+    missing = [k for k in ("inviteSalt", "inviteCode") if not nostr.get(k)]
+    if not missing:
+        return
+    raise ValueError(
+        "mistlib: signaling.nostr." + " and ".join(missing) + " must be set. "
+        "Together they derive the secret that decides who can reach your rooms, "
+        "so peers sharing them share a namespace. Pick values unique to your "
+        "application, e.g. "
+        'MistNode(node_id, config={"signaling": {"mode": "nostr", "nostr": '
+        '{"inviteSalt": "my-app", "inviteCode": "a-shared-secret"}}})'
+    )
 
 EVENT_CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t, ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t)
 # v2: same shape as EVENT_CALLBACK, with a room_id (ptr, len) pair inserted
@@ -104,6 +125,7 @@ class MistNode:
         self.node_id = node_id
         self.signaling_url = signaling_url
         self.config = default_config() if signaling_url is None and config is None else config
+        _assert_invite_configured(self.config)
 
         self.lib.init.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t]
         self.lib.init_with_config.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t]

@@ -534,6 +534,13 @@
     </div>
   </div>
 
+  <script type="importmap">
+      {
+          "imports": {
+              "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.6.0/mistlib_wasm.js"
+          }
+      }
+  </script>
   <script type="module">
     import { MistNode, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
 
@@ -1073,7 +1080,16 @@
 
       // Blank field: use the default Nostr signaling config. Only fall back
       // to legacy WebSocket signaling if the user explicitly enters a URL.
-      const node = signalingUrl ? new MistNode(nodeId, signalingUrl) : new MistNode(nodeId);
+      // Peers find each other only if they share these two values, so they double
+      // as this demo's namespace. Change them for your own app -- anyone who knows
+      // the pair can join.
+      const node = signalingUrl
+        ? new MistNode(nodeId, signalingUrl)
+        : new MistNode(nodeId, {
+            signaling: { mode: "nostr", nostr: {
+              inviteSalt: "mistlib-example-media", inviteCode: "public-demo",
+            } },
+          });
       await node.init();
       node.joinRoom(roomId);
 

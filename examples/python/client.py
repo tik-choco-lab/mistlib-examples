@@ -18,7 +18,7 @@ except ImportError:
 from utils import decode_rust_str, load_sim_config, setup_mist_path
 
 setup_mist_path()
-from mist import MistNode, MistTransform, EVENT_RAW, EVENT_NEIGHBORS, EVENT_LEAVE, EVENT_JOIN, EVENT_AOI_NODES, DELIVERY_UNRELIABLE
+from mist import MistNode, MistTransform, EVENT_RAW, EVENT_NEIGHBORS, EVENT_LEAVE, EVENT_JOIN, EVENT_AOI_NODES, DELIVERY_UNRELIABLE, default_config
 
 _ARG_CONFIG_MAP = {
     'max_connection_count': 'maxConnectionCount',
@@ -142,7 +142,17 @@ class MistClient:
         signaling_raw = getattr(self.args, 'signaling', None)
         signaling_url = signaling_raw.encode('utf-8') if signaling_raw and signaling_raw.strip() else None
 
-        self.node = MistNode(self.args.id, signaling_url=signaling_url) if signaling_url else MistNode(self.args.id)
+        # Peers find each other only if they share these two values, so they double
+        # as this demo's namespace. Change them for your own app -- anyone who knows
+        # the pair can join.
+        demo_config = default_config()
+        demo_config["signaling"]["nostr"]["inviteSalt"] = "mistlib-example-python"
+        demo_config["signaling"]["nostr"]["inviteCode"] = "public-demo"
+        self.node = (
+            MistNode(self.args.id, signaling_url=signaling_url)
+            if signaling_url
+            else MistNode(self.args.id, config=demo_config)
+        )
         final_rust_config = {}
         rust_config_path = getattr(self.args, 'rust_config_path', None)
         if rust_config_path:

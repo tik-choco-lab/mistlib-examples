@@ -19,15 +19,26 @@ repository. This repository contains only the client code and the samples.
 
 ## Setup
 
-Every wrapper needs a prebuilt engine binary. Those binaries are not part of this repository;
-`scripts/sync-mistlib.sh` fetches them from the engine repository, which you need access to.
+Every wrapper needs a prebuilt engine binary. Those binaries are not part of this repository —
+they are published by [mistlib](https://github.com/tik-choco-lab/mistlib):
+
+- **Web** — the WebAssembly build is on npm as
+  [`@tik-choco/mistlib`](https://www.npmjs.com/package/@tik-choco/mistlib).
+- **Python / Unity** — the native library ships in
+  [each release](https://github.com/tik-choco-lab/mistlib/releases/latest) as
+  `mistlib-native-<platform>-<version>.zip`.
+
+Drop them at the paths below, or let the helper script do it if you have a checkout of the
+engine sources:
 
 ```sh
 cp .env.example .env   # configure the source repository and branch
 just sync              # or ./scripts/sync-mistlib.sh
 ```
 
-The artifacts are placed where each wrapper looks for them (all untracked).
+The web demos load the engine from a CDN through each page's import map, so they need no
+local build; point that map at `../../mistlib-wasm/pkg/mistlib_wasm.js` to use one. The other
+wrappers read the artifacts from disk (all untracked).
 
 | Destination | Referenced by |
 | --- | --- |
@@ -57,10 +68,18 @@ We use [just](https://github.com/casey/just). Run `just` to list the recipes.
 
 ## Signaling
 
-The default signaling method is Nostr. The default relay configuration differs per wrapper.
+Signaling is Nostr. Peers find each other only if their `inviteSalt` and `inviteCode` both
+match, so the wrappers ship no defaults for them — pick values unique to your application:
 
-- Python / Unity: they point at the local relay `ws://127.0.0.1:7777`, so either run a relay or override the setting.
-- Web: `relays` is empty, so the engine's built-in relay list is used. Set it explicitly to use your own relays.
+```js
+new MistNode(id, { signaling: { mode: "nostr", nostr: {
+  inviteSalt: "my-app", inviteCode: "a-shared-secret",
+} } });
+```
+
+Relays differ per wrapper: Python and Unity point at a local relay on `ws://127.0.0.1:7777`,
+while the web wrapper leaves `relays` empty and lets the engine fetch a relay list at startup.
+Set it explicitly to use your own.
 
 ## License
 

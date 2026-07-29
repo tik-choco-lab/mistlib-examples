@@ -71,6 +71,7 @@
     <script type="importmap">
         {
             "imports": {
+                "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.6.0/mistlib_wasm.js",
                 "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
                 "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
             }
@@ -216,7 +217,14 @@
 
         const myId = await getIdentity();
         document.getElementById('ui-id').innerText = myId;
-        const node = new MistNode(myId);
+        // Peers find each other only if they share these two values, so they
+        // double as this demo's namespace. Change them for your own app --
+        // anyone who knows the pair can join.
+        const node = new MistNode(myId, {
+            signaling: { mode: "nostr", nostr: {
+                inviteSalt: "mistlib-example-metaverse", inviteCode: "public-demo",
+            } },
+        });
         await node.init();
         node.joinRoom("metaverse-lobby");
         document.getElementById('ui-status').innerText = 'Connected';

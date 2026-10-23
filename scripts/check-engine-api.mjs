@@ -12,25 +12,31 @@
 // Installs the exact version into a scratch directory and imports it, rather
 // than grepping the source, so the check fails the same way a browser would.
 
-import { execFileSync } from "node:child_process";
+import { execSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const version = process.argv[2];
 if (!version) {
     console.error("usage: node scripts/check-engine-api.mjs <version>");
     process.exit(2);
 }
+// npm is run through the shell (on Windows it's npm.cmd, which can't be spawned
+// directly), so only accept a plain version/tag before it's put on a command line.
+if (!/^[\w.+-]+$/.test(version)) {
+    console.error(`invalid version: ${version}`);
+    process.exit(2);
+}
 
-const here = new URL(".", import.meta.url).pathname;
+const here = fileURLToPath(new URL(".", import.meta.url));
 const { required } = JSON.parse(readFileSync(join(here, "engine-api.json"), "utf8"));
 
 const dir = mkdtempSync(join(tmpdir(), "mistlib-api-"));
 try {
-    execFileSync("npm", ["init", "-y"], { cwd: dir, stdio: "ignore" });
-    execFileSync("npm", ["install", `@tik-choco/mistlib@${version}`], {
+    execSync("npm init -y", { cwd: dir, stdio: "ignore" });
+    execSync(`npm install @tik-choco/mistlib@${version}`, {
         cwd: dir,
         stdio: "inherit",
     });

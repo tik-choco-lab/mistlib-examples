@@ -36,6 +36,7 @@
     "storage_add_pinned",
     "storage_kv_set",
     "storage_kv_get",
-    "storage_kv_delete"
+    "storage_kv_delete",
+    "get_version"
   ]
 }

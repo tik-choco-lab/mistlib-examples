@@ -1,11 +1,27 @@
 {
     "name": "@tik-choco/mistlib-web",
     "version": "0.1.0",
-    "description": "Thin browser wrapper around @tik-choco/mistlib, used by the examples in this repository",
-    "private": true,
+    "description": "Thin browser wrapper around @tik-choco/mistlib for web applications",
     "type": "module",
     "license": "Apache-2.0",
     "main": "index.js",
     "types": "index.d.ts",
-    "dependencies": {}
+    "exports": {
+        ".": {
+            "types": "./index.d.ts",
+            "default": "./index.js"
+        }
+    },
+    "files": ["index.js", "index.d.ts", "options.js", "README.md"],
+    "peerDependencies": {
+        "@tik-choco/mistlib": ">=0.6.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/tik-choco-lab/mistlib-examples.git",
+        "directory": "wrappers/web"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }

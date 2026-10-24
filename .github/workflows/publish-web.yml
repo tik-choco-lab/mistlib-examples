@@ -1,0 +1,46 @@
+# Wrapper changes must bump wrappers/web/package.json version to be published.
+# The first version is published manually because npm trusted publishing can only
+# be configured on an existing package.
+
+name: Publish web wrapper
+
+on:
+  push:
+    branches: [main]
+    paths: ['wrappers/web/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing requires npm >= 11.5.1; match the engine workflow.
+      - name: Ensure npm supports trusted publishing
+        run: |
+          set -euo pipefail
+          npm install -g npm@^11
+          npm --version
+          node --version
+
+      # Configure npm's trusted publisher for tik-choco-lab/mistlib-examples,
+      # workflow publish-web.yml, with no environment. OIDC provides provenance.
+      - name: Publish
+        working-directory: wrappers/web
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          if published=$(npm view "@tik-choco/mistlib-web@$version" version) && [ "$published" = "$version" ]; then
+            echo "already published"
+            exit 0
+          fi
+          npm publish

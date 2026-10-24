@@ -1,6 +1,10 @@
 # Wrapper changes must bump wrappers/web/package.json version to be published.
-# The first version is published manually because npm trusted publishing can only
-# be configured on an existing package.
+# The first version was published manually because npm trusted publishing can
+# only be configured on an existing package.
+#
+# The trusted publisher only allows *staged* publishing: this workflow submits
+# the version with `npm stage publish`, and it goes live only after a maintainer
+# approves it with 2FA (npmjs.com > Staged Packages, or `npm stage approve`).
 
 name: Publish web wrapper
 
@@ -24,11 +28,11 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      # Trusted publishing requires npm >= 11.5.1; match the engine workflow.
-      - name: Ensure npm supports trusted publishing
+      # `npm stage` requires npm >= 11.15.0 (trusted publishing itself >= 11.5.1).
+      - name: Ensure npm supports staged trusted publishing
         run: |
           set -euo pipefail
-          npm install -g npm@^11
+          npm install -g npm@^11.15.0
           npm --version
           node --version
 
@@ -43,4 +47,4 @@ jobs:
             echo "already published"
             exit 0
           fi
-          npm publish
+          npm stage publish

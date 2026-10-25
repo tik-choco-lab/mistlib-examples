@@ -61,6 +61,10 @@ export const MEDIA_EVENT_TRACK_REMOVED = 101;
 export const DELIVERY_RELIABLE = 0;
 export const DELIVERY_UNRELIABLE_ORDERED = 1;
 export const DELIVERY_UNRELIABLE = 2;
+/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers.
+ * Requires the upcoming mistlib release.
+ */
+export const DELIVERY_RELIABLE_UNORDERED = 3;
 export const storage_add = mist_storage_add;
 export const storage_get = mist_storage_get;
 export const storage_add_at = mist_storage_add_at;
@@ -254,6 +258,13 @@ export class MistNode {
         }
     }
 
+    /**
+     * Send with code 0 (ReliableOrdered), 1 (UnreliableOrdered), 2 (Unreliable,
+     * default), or 3 (ReliableUnordered, fully reliable without ordering).
+     * Code 3 requires the upcoming engine release and falls back to reliable
+     * ordered when the peer lacks support.
+     * @param {0 | 1 | 2 | 3} [delivery=2] Delivery guarantee.
+     */
     sendMessage(toId, payload, delivery = DELIVERY_UNRELIABLE, roomId) {
         const to = toId || "";
         let data;

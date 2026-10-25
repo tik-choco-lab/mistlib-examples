@@ -3,6 +3,7 @@ import inspect
 import os
 import sys
 import json
+from typing import Literal, Optional
 
 EVENT_RAW = 0
 EVENT_OVERLAY = 1
@@ -15,9 +16,13 @@ EVENT_NODE_POSITION_UPDATED = 7
 EVENT_AOI_NODES = 8
 EVENT_ALL_CONNECTIONS_LOST = 9
 
-DELIVERY_RELIABLE = 0
-DELIVERY_UNRELIABLE_ORDERED = 1
-DELIVERY_UNRELIABLE = 2
+DeliveryMethod = Literal[0, 1, 2, 3]
+
+DELIVERY_RELIABLE: Literal[0] = 0
+DELIVERY_UNRELIABLE_ORDERED: Literal[1] = 1
+DELIVERY_UNRELIABLE: Literal[2] = 2
+# Fully reliable, unordered; falls back to reliable ordered on unsupported peers.
+DELIVERY_RELIABLE_UNORDERED: Literal[3] = 3
 
 if sys.platform == "win32":
     lib_name = "mistlib.dll"
@@ -178,7 +183,16 @@ class MistNode:
             return
         self.lib.update_position(float(x), float(y), float(z))
 
-    def send_message(self, to_id, payload, delivery=DELIVERY_UNRELIABLE, room=None):
+    def send_message(self, to_id: Optional[str], payload: bytes,
+                     delivery: DeliveryMethod = DELIVERY_UNRELIABLE,
+                     room: Optional[str] = None) -> None:
+        """Send bytes using a delivery code (defaults to 2, Unreliable).
+
+        0 = ReliableOrdered, 1 = UnreliableOrdered, 2 = Unreliable,
+        3 = ReliableUnordered (fully reliable without ordering guarantees).
+        Code 3 requires the upcoming mistlib release and falls back to the
+        reliable ordered channel when the peer lacks support.
+        """
         to_id_bytes = to_id.encode('utf-8') if to_id else b""
         if room is not None:
             room_bytes = room.encode('utf-8')

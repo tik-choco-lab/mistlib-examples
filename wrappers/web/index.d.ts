@@ -11,9 +11,13 @@ export const EVENT_ROOM_JOIN_FAILED: number;
 export const EVENT_ROOM_LEFT: number;
 export const MEDIA_EVENT_TRACK_ADDED: number;
 export const MEDIA_EVENT_TRACK_REMOVED: number;
-export const DELIVERY_RELIABLE: number;
-export const DELIVERY_UNRELIABLE_ORDERED: number;
-export const DELIVERY_UNRELIABLE: number;
+export const DELIVERY_RELIABLE: 0;
+export const DELIVERY_UNRELIABLE_ORDERED: 1;
+export const DELIVERY_UNRELIABLE: 2;
+/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers.
+ * Requires the upcoming mistlib release.
+ */
+export const DELIVERY_RELIABLE_UNORDERED: 3;
 export const DEFAULT_SIGNALING_URL: string;
 export const DEFAULT_NOSTR_RELAY_URL: string;
 export function defaultConfig(): Record<string, unknown>;
@@ -33,7 +37,8 @@ export function storage_kv_delete(key: string): Promise<void>;
 export type DeliveryMethod =
     | typeof DELIVERY_RELIABLE
     | typeof DELIVERY_UNRELIABLE_ORDERED
-    | typeof DELIVERY_UNRELIABLE;
+    | typeof DELIVERY_UNRELIABLE
+    | typeof DELIVERY_RELIABLE_UNORDERED;
 
 export interface MediaEventPayload {
     fromId: string;
@@ -77,6 +82,11 @@ export class MistNode {
     setConfig(config: string | Record<string, unknown>): boolean;
     getStats(): Record<string, unknown>;
 
+    /**
+     * Send using a delivery guarantee; defaults to Unreliable (2).
+     * ReliableUnordered (3) requires the upcoming engine release and falls back
+     * to reliable ordered when the peer lacks support.
+     */
     sendMessage(
         toId: string | null | undefined,
         payload: Uint8Array | ArrayBuffer | string | Record<string, unknown>,

@@ -8,11 +8,20 @@ namespace MistLib
 {
     public class MistEngine : MonoBehaviour
     {
+        /// <summary>Delivery guarantees matching the public mistlib FFI codes.</summary>
         public enum DeliveryMethod : uint
         {
+            /// <summary>Fully reliable, ordered delivery.</summary>
             ReliableOrdered = 0,
+            /// <summary>Messages may be dropped, but arrive in order.</summary>
             UnreliableOrdered = 1,
-            Unreliable = 2
+            /// <summary>Messages may be dropped or reordered.</summary>
+            Unreliable = 2,
+            /// <summary>
+            /// Fully reliable without ordering guarantees. Falls back to the reliable
+            /// ordered channel when the peer lacks support. Requires the upcoming mistlib release.
+            /// </summary>
+            ReliableUnordered = 3
         }
 
         public static MistEngine I { get; private set; }
@@ -177,6 +186,11 @@ namespace MistLib
             MistFFI.update_position(pos.x, pos.y, pos.z);
         }
 
+        /// <summary>Send bytes with the selected delivery guarantee (default: Unreliable).</summary>
+        /// <param name="targetNodeId">Destination node, or empty for broadcast.</param>
+        /// <param name="data">Message payload.</param>
+        /// <param name="method">FFI code 0, 1, 2, or 3; see DeliveryMethod.</param>
+        /// <param name="room">Optional room scope.</param>
         public void SendMessage(string targetNodeId, byte[] data, DeliveryMethod method = DeliveryMethod.Unreliable, string room = null)
         {
             var idBytes = string.IsNullOrEmpty(targetNodeId) ? Array.Empty<byte>() : Encoding.UTF8.GetBytes(targetNodeId);

@@ -81,6 +81,26 @@ Relays differ per wrapper: Python and Unity point at a local relay on `ws://127.
 while the web wrapper leaves `relays` empty and lets the engine fetch a relay list at startup.
 Set it explicitly to use your own.
 
+## Delivery methods
+
+| Code | Method | Guarantee |
+| --- | --- | --- |
+| 0 | ReliableOrdered | Fully reliable, ordered |
+| 1 | UnreliableOrdered | May drop messages, ordered |
+| 2 | Unreliable | May drop or reorder messages (default) |
+| 3 | ReliableUnordered | Fully reliable, unordered |
+
+Code 3 requires the upcoming mistlib release. When a peer lacks the capability,
+the engine uses its reliable ordered channel. Codes 0–2 are unchanged.
+
+Python and Web export `DELIVERY_RELIABLE` (0), `DELIVERY_UNRELIABLE_ORDERED` (1),
+`DELIVERY_UNRELIABLE` (2), and `DELIVERY_RELIABLE_UNORDERED` (3). Unity exposes
+`MistEngine.DeliveryMethod` with the method names above.
+
+The upcoming engine also supplies the `storageTransfer` CP50 defaults; wrappers
+pass configuration through without needing to set them. The flat FFI JSON key is
+`storageTransfer` (the full engine configuration uses `storage.transfer`).
+
 ## License
 
 [Apache License 2.0](LICENSE)

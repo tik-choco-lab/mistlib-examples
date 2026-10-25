@@ -81,6 +81,26 @@ new MistNode(id, { signaling: { mode: "nostr", nostr: {
 参照し、web ラッパーは `relays` を空にしてエンジンが起動時にリレー一覧を取得します。任意の
 リレーを使う場合は設定で明示してください。
 
+## 配送方式
+
+| コード | 方式 | 保証 |
+| --- | --- | --- |
+| 0 | ReliableOrdered | 完全な信頼性、順序保証あり |
+| 1 | UnreliableOrdered | 欠落の可能性あり、順序保証あり |
+| 2 | Unreliable | 欠落・順序入れ替わりの可能性あり（既定） |
+| 3 | ReliableUnordered | 完全な信頼性、順序保証なし |
+
+コード 3 には次の mistlib リリースが必要です。相手が未対応の場合、エンジンは
+信頼性と順序を保証するチャネルへフォールバックします。コード 0〜2 は変更ありません。
+
+Python と Web は `DELIVERY_RELIABLE` (0)、`DELIVERY_UNRELIABLE_ORDERED` (1)、
+`DELIVERY_UNRELIABLE` (2)、`DELIVERY_RELIABLE_UNORDERED` (3) を公開します。
+Unity は上表の方式名を `MistEngine.DeliveryMethod` で公開します。
+
+次のエンジンリリースは `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
+そのまま渡すため、既定値の指定は不要です。flat FFI JSON のキーは `storageTransfer`
+です（エンジンの完全な設定では `storage.transfer`）。
+
 ## ライセンス
 
 [Apache License 2.0](LICENSE)

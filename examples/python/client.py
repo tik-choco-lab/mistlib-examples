@@ -529,8 +529,8 @@ class MistClient:
                     self.aoi_nodes = {n["id"]: n for n in nodes if n["id"] != self.args.id}
                 except Exception: pass
 
-    def leave_room(self):
-        if self.node: self.node.leave_room()
+    def leave_all_rooms(self):
+        if self.node: self.node.leave_all_rooms()
         if self.eval_ws:
             try: self.eval_ws.close()
             except Exception: pass

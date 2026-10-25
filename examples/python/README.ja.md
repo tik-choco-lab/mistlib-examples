@@ -38,3 +38,13 @@ python examples/python/gui_client.py --id my-node --room demo-room
 | `--rust-config-path` | `MistNode.init()` の前に `set_config` でエンジンへ渡す設定ファイル。キーは Rust 側の `Config` 構造に対応 |
 
 CLI 引数は設定ファイルより優先されます。
+
+## ルームからの退出
+
+Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
+`node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
+`MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
+前者は指定ルームのみ、後者は全ルームを退出します。
+全ルーム退出 API には mistlib 0.7.0 以降が必要です。Python は古いネイティブ
+ライブラリを読み込むと警告を出し、従来の関数にフォールバックします。
+引数なしのルーム退出呼び出しは非推奨です。

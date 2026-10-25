@@ -27,3 +27,12 @@ Then open `http://localhost:8000/examples/web/index.html`.
 - `W / A / S / D`: Move and turn
 - Mouse drag: Rotate the camera
 - Mouse wheel: Zoom
+
+## Leaving rooms
+
+Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
+`node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
+`MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
+The first operation leaves one room; the second leaves all rooms.
+The all-room API requires mistlib 0.7.0 or later; Python warns and falls back
+when loading an older native library. No-argument room-leave calls are deprecated.

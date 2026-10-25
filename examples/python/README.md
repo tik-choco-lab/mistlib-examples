@@ -38,3 +38,12 @@ Or via `just`: `just gui`, `just cli`, `just bot` (headless).
 | `--rust-config-path` | Config file passed to the engine via `set_config` before `MistNode.init()`; its keys match the Rust-side `Config` struct |
 
 CLI arguments take precedence over the config file.
+
+## Leaving rooms
+
+Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
+`node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
+`MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
+The first operation leaves one room; the second leaves all rooms.
+The all-room API requires mistlib 0.7.0 or later; Python warns and falls back
+when loading an older native library. No-argument room-leave calls are deprecated.

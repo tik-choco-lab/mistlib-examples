@@ -23,3 +23,16 @@ MistEngine.I.SendMessage("peer-id", data, MistEngine.DeliveryMethod.ReliableUnor
 
 JSON configuration passes through to the engine, including `storageTransfer`.
 The upcoming engine supplies CP50 defaults when it is omitted.
+
+## Leaving rooms
+
+```csharp
+MistEngine.I.LeaveRoom("my-room"); // Leave only this room
+MistEngine.I.LeaveAllRooms();     // Leave every room
+```
+
+`LeaveAllRooms()` requires mistlib native 0.7.0 or later and is also used during
+engine destruction. `LeaveRoom(id)` binds native `leave_room_id`; `LeaveAllRooms()`
+binds `leave_all_rooms`. The wrapper never calls the native `leave_room` symbol,
+whose signature will change in 0.8. The old no-argument `LeaveRoom()` is an
+`[Obsolete]` alias forwarding to `LeaveAllRooms()`.

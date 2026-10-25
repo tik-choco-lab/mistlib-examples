@@ -104,3 +104,13 @@ Unity は上表の方式名を `MistEngine.DeliveryMethod` で公開します。
 ## ライセンス
 
 [Apache License 2.0](LICENSE)
+
+## ルームからの退出
+
+Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
+`node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
+`MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
+前者は指定ルームのみ、後者は全ルームを退出します。
+全ルーム退出 API には mistlib 0.7.0 以降が必要です。Python は古いネイティブ
+ライブラリを読み込むと警告を出し、従来の関数にフォールバックします。
+引数なしのルーム退出呼び出しは非推奨です。

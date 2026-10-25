@@ -24,7 +24,7 @@ def run_cli():
     except KeyboardInterrupt:
         print("\n[*] Stopping...")
     finally:
-        client.leave_room()
+        client.leave_all_rooms()
 
 if __name__ == "__main__":
     run_cli()

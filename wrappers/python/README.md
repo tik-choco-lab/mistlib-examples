@@ -44,3 +44,15 @@ The upcoming engine supplies CP50 defaults when it is omitted.
 
 Run the wrapper tests with `python3 -m unittest discover -s wrappers/python/tests`
 from the repository root; no native binary is needed.
+
+## Leaving rooms
+
+```python
+node.leave_room("my-room")  # Leave only this room
+node.leave_all_rooms()     # Leave every room and release the engine
+```
+
+`leave_all_rooms` requires mistlib 0.7.0 or later. With older native libraries,
+Python warns and falls back to the legacy native `leave_room()` symbol.
+The no-argument `node.leave_room()` and `node.leave_room_id(id)` aliases emit
+`DeprecationWarning`; use `leave_all_rooms()` and `leave_room(id)` respectively.

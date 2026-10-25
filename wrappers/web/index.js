@@ -23,7 +23,7 @@ const {
     send_message: mist_send_message,
     send_message_in_room: mist_send_message_in_room,
     leave_room: mist_leave_room,
-    leave_room_id: mist_leave_room_id,
+    leave_all_rooms: mist_leave_all_rooms,
     register_event_callback: mist_register_event_callback,
     register_media_event_callback: mist_register_media_event_callback,
     register_local_track: mist_register_local_track,
@@ -114,7 +114,7 @@ export class MistNode {
         if (this.initialized) return;
         if (this._initPromise) return this._initPromise;
         if (activeNode && activeNode !== this) {
-            throw new Error("mistlib-wasm supports one active MistNode per page; call leaveRoom() before initializing another node.");
+            throw new Error("mistlib-wasm supports one active MistNode per page; call leaveAllRooms() before initializing another node.");
         }
 
         activeNode = this;
@@ -358,12 +358,24 @@ export class MistNode {
         return stream;
     }
 
+    /** Leave one room. The no-argument form is deprecated. */
     leaveRoom(roomId) {
-        if (roomId) {
-            mist_leave_room_id(roomId);
-            return;
+        if (roomId === undefined) {
+            console.warn('leaveRoom() without an id is deprecated; use leaveAllRooms().');
+            return this.leaveAllRooms();
         }
-        mist_leave_room();
+        return mist_leave_room(roomId);
+    }
+
+    /** @deprecated Use leaveRoom(roomId). */
+    leaveRoomId(roomId) {
+        console.warn('leaveRoomId() is deprecated; use leaveRoom(roomId).');
+        return this.leaveRoom(roomId);
+    }
+
+    /** Leave all rooms and release the engine. Requires mistlib >= 0.7.0. */
+    leaveAllRooms() {
+        mist_leave_all_rooms();
         if (activeNode === this) {
             activeNode = null;
         }

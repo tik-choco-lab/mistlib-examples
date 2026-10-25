@@ -3,6 +3,7 @@ import inspect
 import os
 import sys
 import json
+import warnings
 from typing import Literal, Optional
 
 EVENT_RAW = 0
@@ -92,8 +93,7 @@ LOG_CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_uint32, ctypes.POINTER(ctypes.c_u
 
 # ctypes caches CDLL handles per path (the OS loader dedupes them), so every
 # MistNode would otherwise drive the same process-wide Rust engine. Guard
-# against a second instance until the first releases via leave_room() (all
-# rooms).
+# against a second instance until the first releases via leave_all_rooms().
 _active_instance = None
 
 def _adapt_event_callback(event_cb):
@@ -119,7 +119,7 @@ class MistNode:
         global _active_instance
         if _active_instance is not None:
             raise RuntimeError(
-                "mistlib supports one active MistNode per process; call leave_room() "
+                "mistlib supports one active MistNode per process; call leave_all_rooms() "
                 "before initializing another node."
             )
 
@@ -143,7 +143,18 @@ class MistNode:
         self.lib.update_position_in_room.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_float, ctypes.c_float, ctypes.c_float]
         self.lib.send_message.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32]
         self.lib.send_message_in_room.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32]
-        self.lib.leave_room.argtypes = []
+        try:
+            self._leave_all_rooms = self.lib.leave_all_rooms
+        except AttributeError:
+            warnings.warn(
+                "Loaded mistlib lacks leave_all_rooms (requires mistlib >= 0.7.0); "
+                "falling back to deprecated native leave_room(). Upgrade the native library.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            self._leave_all_rooms = self.lib.leave_room
+        self._leave_all_rooms.argtypes = []
+        self._leave_all_rooms.restype = None
         self.lib.leave_room_id.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
         self.lib.get_stats.argtypes = [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
         self.lib.get_stats.restype = ctypes.c_uint32
@@ -200,13 +211,31 @@ class MistNode:
             return
         self.lib.send_message(to_id_bytes, len(to_id_bytes), payload, len(payload), delivery)
 
-    def leave_room(self, room_id=None):
+    def leave_room(self, room=None):
+        """Leave one room. Omitting room is deprecated; use leave_all_rooms()."""
+        if room is None:
+            warnings.warn(
+                "leave_room() without a room is deprecated; use leave_all_rooms().",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return self.leave_all_rooms()
+        room_bytes = room.encode('utf-8')
+        self.lib.leave_room_id(room_bytes, len(room_bytes))
+
+    def leave_room_id(self, room_id):
+        """Deprecated alias for leave_room(room)."""
+        warnings.warn(
+            "leave_room_id() is deprecated; use leave_room(room).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.leave_room(room_id)
+
+    def leave_all_rooms(self):
+        """Leave all rooms and release this process's engine (mistlib >= 0.7.0)."""
         global _active_instance
-        if room_id is not None:
-            room_bytes = room_id.encode('utf-8')
-            self.lib.leave_room_id(room_bytes, len(room_bytes))
-            return
-        self.lib.leave_room()
+        self._leave_all_rooms()
         if _active_instance is self:
             _active_instance = None
 

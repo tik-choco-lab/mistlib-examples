@@ -18,7 +18,7 @@
     "send_message",
     "send_message_in_room",
     "leave_room",
-    "leave_room_id",
+    "leave_all_rooms",
     "register_event_callback",
     "register_media_event_callback",
     "register_local_track",

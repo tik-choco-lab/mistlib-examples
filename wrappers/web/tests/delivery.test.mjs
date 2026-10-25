@@ -61,3 +61,39 @@ test('default remains Unreliable and string payloads are encoded', () => {
         ['send_message', '', new TextEncoder().encode('hello'), 2],
     ]);
 });
+
+
+test('room leave uses wasm leave_room(id), including an empty id', async () => {
+    await node.init();
+    calls.length = 0;
+    node.leaveRoom('room-1');
+    node.leaveRoom('');
+    assert.deepEqual(calls, [['leave_room', 'room-1'], ['leave_room', '']]);
+    assert.equal(node.initialized, true);
+    const other = new wrapper.MistNode('other', 'ws://localhost');
+    await assert.rejects(other.init(), /leaveAllRooms/);
+});
+
+test('deprecated aliases warn and forward to the new operations', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    calls.length = 0;
+    node.leaveRoomId('room-1');
+    node.leaveRoom();
+    assert.deepEqual(calls, [['leave_room', 'room-1'], ['leave_all_rooms']]);
+    assert.equal(node.initialized, false);
+    assert.equal(warn.mock.callCount(), 2);
+    assert.match(warn.mock.calls[0].arguments[0], /deprecated.*leaveRoom/);
+    assert.match(warn.mock.calls[1].arguments[0], /deprecated.*leaveAllRooms/);
+});
+
+test('leaveAllRooms releases the engine for another node', async () => {
+    await node.init();
+    calls.length = 0;
+    node.leaveAllRooms();
+    assert.deepEqual(calls, [['leave_all_rooms']]);
+    assert.equal(node.initialized, false);
+    const other = new wrapper.MistNode('other', 'ws://localhost');
+    await other.init();
+    assert.equal(other.initialized, true);
+    other.leaveAllRooms();
+});

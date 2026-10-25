@@ -38,7 +38,7 @@ namespace MistLib
         public static extern void join_room(IntPtr roomPtr, UIntPtr roomLen);
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void leave_room();
+        public static extern void leave_all_rooms();
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leave_room_id(IntPtr roomPtr, UIntPtr roomLen);

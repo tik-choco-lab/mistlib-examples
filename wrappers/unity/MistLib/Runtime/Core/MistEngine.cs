@@ -112,7 +112,7 @@ namespace MistLib
         {
             if (I == this)
             {
-                MistFFI.leave_room();
+                LeaveAllRooms();
                 I = null;
             }
         }
@@ -165,7 +165,10 @@ namespace MistLib
             PinAndCall(bytes, (ptr, len) => MistFFI.join_room(ptr, len));
         }
 
-        public void LeaveRoom() => MistFFI.leave_room();
+        [Obsolete("Use LeaveAllRooms() instead.")]
+        public void LeaveRoom() => LeaveAllRooms();
+
+        public void LeaveAllRooms() => MistFFI.leave_all_rooms();
 
         public void LeaveRoom(string roomId)
         {

@@ -14,7 +14,7 @@
     },
     "files": ["index.js", "index.d.ts", "options.js", "README.md"],
     "peerDependencies": {
-        "@tik-choco/mistlib": ">=0.6.2"
+        "@tik-choco/mistlib": ">=0.7.0"
     },
     "repository": {
         "type": "git",

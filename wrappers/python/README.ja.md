@@ -44,3 +44,15 @@ node.send_message("peer-id", b"hello", delivery=DELIVERY_RELIABLE_UNORDERED)
 
 リポジトリルートで `python3 -m unittest discover -s wrappers/python/tests` を実行すると
 ネイティブバイナリなしでラッパーのテストを実行できます。
+
+## ルームからの退出
+
+```python
+node.leave_room("my-room")  # 指定ルームのみ退出
+node.leave_all_rooms()     # 全ルームを退出してエンジンを解放
+```
+
+`leave_all_rooms` には mistlib 0.7.0 以降が必要です。古いネイティブライブラリでは
+警告を出し、従来のネイティブ `leave_room()` にフォールバックします。
+引数なしの `node.leave_room()` と `node.leave_room_id(id)` は非推奨で、
+`DeprecationWarning` を出します。それぞれ `leave_all_rooms()` と `leave_room(id)` に移行してください。

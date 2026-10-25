@@ -73,7 +73,13 @@ export class MistNode {
     joinRoom(roomId: string): void;
     joinRoomAsync(roomId: string): Promise<void>;
     isRoomJoined(roomId: string): boolean;
-    leaveRoom(roomId?: string): void;
+    leaveRoom(roomId: string): void;
+    /** @deprecated Use leaveAllRooms(). */
+    leaveRoom(): void;
+    /** @deprecated Use leaveRoom(roomId). */
+    leaveRoomId(roomId: string): void;
+    /** Requires mistlib >= 0.7.0. */
+    leaveAllRooms(): void;
     updatePosition(x: number, y: number, z?: number, roomId?: string): void;
 
     getNeighbors(roomId?: string): unknown[];

@@ -27,7 +27,7 @@ await node.joinRoomAsync('my-room');
 
 Choose invite values unique to your application and share them with its peers.
 The wrapper imports the engine by package name (`@tik-choco/mistlib`), so your
-bundler or browser import map must resolve it. The engine requires version 0.6.2
+bundler or browser import map must resolve it. The engine requires version 0.7.0
 or later. Wrapper versions are independent from engine versions.
 
 ## Delivery methods
@@ -55,3 +55,15 @@ engine supplies CP50 defaults when it is omitted.
 
 Run `node --test wrappers/web/tests/*.test.mjs` from the repository root to test
 with a mock engine; no WASM binary is needed.
+
+## Leaving rooms
+
+```js
+node.leaveRoom('my-room'); // Leave only this room
+node.leaveAllRooms();     // Leave every room and release the engine
+```
+
+`leaveAllRooms()` calls the WASM `leave_all_rooms()` export and requires mistlib
+0.7.0 or later. `leaveRoom(id)` calls WASM `leave_room(id)`.
+The no-argument `leaveRoom()` and `leaveRoomId(id)` aliases are deprecated and
+warn; use `leaveAllRooms()` and `leaveRoom(id)` respectively.

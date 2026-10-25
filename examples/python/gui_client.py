@@ -122,7 +122,7 @@ def run_simulation():
     except KeyboardInterrupt:
         pass
     finally:
-        client.leave_room()
+        client.leave_all_rooms()
         if not final_args.headless:
             pygame.quit()
 

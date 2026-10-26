@@ -1,6 +1,6 @@
 {
     "name": "@tik-choco/mistlib-web",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Thin browser wrapper around @tik-choco/mistlib for web applications",
     "type": "module",
     "license": "Apache-2.0",
@@ -14,7 +14,7 @@
     },
     "files": ["index.js", "index.d.ts", "options.js", "README.md"],
     "peerDependencies": {
-        "@tik-choco/mistlib": ">=0.7.0"
+        "@tik-choco/mistlib": "0.7.1"
     },
     "repository": {
         "type": "git",

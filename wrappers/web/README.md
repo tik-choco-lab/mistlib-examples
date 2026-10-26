@@ -2,8 +2,12 @@
 
 Thin browser wrapper around the [mistlib engine](https://github.com/tik-choco-lab/mistlib).
 
+Engine 0.7.1 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.1). See the
+[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.1 exactly.
+
 ```sh
-npm i @tik-choco/mistlib @tik-choco/mistlib-web
+npm i @tik-choco/mistlib@0.7.1 @tik-choco/mistlib-web@0.4.0
 ```
 
 Use in a browser application:
@@ -28,12 +32,12 @@ await node.joinRoomAsync('my-room');
 
 Choose invite values unique to your application and share them with its peers.
 The wrapper imports the engine by package name (`@tik-choco/mistlib`), so your
-bundler or browser import map must resolve it. The engine requires version 0.7.0
-or later. Wrapper versions are independent from engine versions.
+bundler or browser import map must resolve it. The engine requires version 0.7.1.
+Wrapper versions are independent from engine versions.
 
 Both metadata functions initialize WASM without starting a node and return strings;
 `getBuildInfo()` returns JSON. If the loaded engine lacks these exports, update to
-`@tik-choco/mistlib >= 0.7.0`. For a local import map, rerun `just fetch 0.7.0` or
+`@tik-choco/mistlib 0.7.1`. For a local import map, rerun `just fetch 0.7.1` or
 `just sync` at the repository root, then reload the page.
 
 ## Delivery methods
@@ -55,7 +59,7 @@ import { DELIVERY_RELIABLE_UNORDERED } from '@tik-choco/mistlib-web';
 node.sendMessage('peer-id', 'hello', DELIVERY_RELIABLE_UNORDERED);
 ```
 
-Options pass through to the engine, including `storageTransfer`. MistLib 0.7.0
+Options pass through to the engine, including `storageTransfer`. MistLib 0.7.1
 supplies CP50 defaults when it is omitted.
 
 Run `node --test wrappers/web/tests/*.test.mjs` from the repository root to test
@@ -69,7 +73,7 @@ node.leaveAllRooms();     // Leave every room and release the engine
 ```
 
 `leaveAllRooms()` calls the WASM `leave_all_rooms()` export and requires mistlib
-0.7.0 or later. `leaveRoom(id)` calls WASM `leave_room(id)`.
+0.7.1. `leaveRoom(id)` calls WASM `leave_room(id)`.
 The no-argument `leaveRoom()` and `leaveRoomId(id)` aliases are deprecated and
 warn; use `leaveAllRooms()` and `leaveRoom(id)` respectively.
 
@@ -86,7 +90,21 @@ Storage exports follow the engine's async API: `storage_add`, `storage_get`,
 `storage_add_pinned`, `storage_kv_set`, `storage_kv_get`, and `storage_kv_delete`.
 Pinning keeps roots out of eviction; KV data is local to the browser origin.
 
+## Events
+
+Import the `EVENT_*` constants for `node.onEvent((type, fromId, payload, roomId) => ...)`.
+`payload` is a `Uint8Array`; decode JSON only for JSON events. Peer/AOI entry and
+exit payloads are the fixed strings `joined`, `entered`, or `left`. New Web events
+are `EVENT_NODE_POSITION_UPDATED` (7) and `EVENT_ALL_CONNECTIONS_LOST` (9).
+Room joined/join failed/left now use 10/11/12; media remains 100/101 through
+`onMediaEvent`. `joinRoom()` starts a join; wait for `EVENT_ROOM_JOINED` or use
+`await node.joinRoomAsync(id)` before reporting readiness.
+
 ## Changelog
+
+- **0.4.0** (unreleased, breaking): Target engine 0.7.1 exactly; adopt unified
+  event codes, add position/connection-loss events and literal TypeScript values.
+  Peer/AOI callbacks now carry the engine's native-compatible fixed strings.
 
 - **0.3.0**: Require engine 0.7.0, add `getBuildInfo()`, stale-engine diagnostics,
   track audience control, async room leave and log level configuration.

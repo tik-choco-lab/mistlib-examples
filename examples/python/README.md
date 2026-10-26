@@ -2,6 +2,10 @@
 
 Samples using mistlib from Python.
 
+Engine 0.7.1 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.1). See the
+[root README](../../README.md) for setup and the unified event table. These clients target engine 0.7.1 exactly.
+
 日本語版: [README.ja.md](README.ja.md)
 
 - `gui_client.py`: 2D visualization of the space with Pygame. Shows your own position and the bots in real time.
@@ -14,7 +18,7 @@ Install the dependencies and place the engine binary (see the [root README](../.
 
 ```sh
 just deps
-just fetch 0.7.0
+just fetch 0.7.1
 ```
 
 Then run a sample from the repository root:
@@ -25,7 +29,7 @@ python examples/python/gui_client.py --id my-node --room demo-room
 
 Or via `just`: `just gui`, `just cli`, `just bot` (headless).
 
-The samples print the loaded engine version at startup. MistLib 0.7.0 or later is required.
+The samples print the loaded engine version at startup. MistLib 0.7.1 is required.
 
 ## Options
 
@@ -47,4 +51,4 @@ Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
 `node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
 The first operation leaves one room; the second leaves all rooms.
-All wrappers require mistlib 0.7.0 or later. No-argument room-leave calls are deprecated.
+All wrappers require mistlib 0.7.1. No-argument room-leave calls are deprecated.

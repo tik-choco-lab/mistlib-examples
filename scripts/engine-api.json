@@ -1,4 +1,5 @@
 {
+  "engineVersion": "0.7.1",
   "required": [
     "default",
     "init",
@@ -24,6 +25,7 @@
     "register_media_event_callback",
     "register_local_track",
     "get_local_track",
+    "set_local_track_audience",
     "publish_local_track",
     "unpublish_local_track",
     "remove_local_track",
@@ -41,5 +43,24 @@
     "get_version",
     "get_build_info",
     "set_log_level"
-  ]
+  ],
+  "events": {
+    "Raw": 0,
+    "Overlay": 1,
+    "PeerConnected": 2,
+    "PeerDisconnected": 3,
+    "Neighbors": 4,
+    "AoiEntered": 5,
+    "AoiLeft": 6,
+    "NodePositionUpdated": 7,
+    "AoiNodes": 8,
+    "AllConnectionsLost": 9,
+    "RoomJoined": 10,
+    "RoomJoinFailed": 11,
+    "RoomLeft": 12
+  },
+  "mediaEvents": {
+    "TrackAdded": 100,
+    "TrackRemoved": 101
+  }
 }

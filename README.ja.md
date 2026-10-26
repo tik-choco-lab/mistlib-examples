@@ -28,11 +28,13 @@ English: [README.md](README.md)
   [各リリース](https://github.com/tik-choco-lab/mistlib/releases/latest) の
   `mistlib-native-<platform>-<version>.zip`。
 
-すべてのラッパーは **MistLib 0.7.0 以降**を必要とします。GitHub CLI (`gh`) と
-`unzip` を用意し、リリース成果物を取得してください。
+すべてのラッパーは **MistLib 0.7.1 のみ**を対象にします。ネイティブと WASM の成果物は
+[v0.7.1 リリース](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1) で、
+エンジンは npm の `@tik-choco/mistlib@0.7.1` として公開されています。
+GitHub CLI (`gh`) と `unzip` を用意して取得します。
 
 ```sh
-just fetch 0.7.0        # または ./scripts/sync-mistlib.sh --release 0.7.0
+just fetch 0.7.1        # または ./scripts/sync-mistlib.sh --release 0.7.1
 ```
 
 WASM と Linux x86_64 / Windows x86_64 / macOS aarch64 のネイティブライブラリを
@@ -64,7 +66,7 @@ web のデモは各ページの import map 経由で CDN からエンジンを�
 
 | コマンド | 内容 |
 | --- | --- |
-| `just fetch 0.7.0` | リリース成果物を取得して配置 (Rust ビルド不要) |
+| `just fetch 0.7.1` | リリース成果物を取得して配置 (Rust ビルド不要) |
 | `just sync` | エンジンをビルドして成果物を配置 |
 | `just sync-fast` | ビルドを省略してコピーのみ |
 | `just serve` | Web サンプル用の HTTP サーバーを起動 |
@@ -99,14 +101,14 @@ new MistNode(id, { signaling: { mode: "nostr", nostr: {
 | 2 | Unreliable | 欠落・順序入れ替わりの可能性あり（既定） |
 | 3 | ReliableUnordered | 完全な信頼性、順序保証なし |
 
-コード 3 は mistlib 0.7.0 で利用できます。相手が未対応の場合、エンジンは
+コード 3 は mistlib 0.7.1 で利用できます。相手が未対応の場合、エンジンは
 信頼性と順序を保証するチャネルへフォールバックします。コード 0〜2 は変更ありません。
 
 Python と Web は `DELIVERY_RELIABLE` (0)、`DELIVERY_UNRELIABLE_ORDERED` (1)、
 `DELIVERY_UNRELIABLE` (2)、`DELIVERY_RELIABLE_UNORDERED` (3) を公開します。
 Unity は上表の方式名を `MistEngine.DeliveryMethod` で公開します。
 
-mistlib 0.7.0 は `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
+mistlib 0.7.1 は `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
 そのまま渡すため、既定値の指定は不要です。flat FFI JSON のキーは `storageTransfer`
 です（エンジンの完全な設定では `storage.transfer`）。
 
@@ -117,10 +119,52 @@ Web は非同期の `getVersion()` / `getBuildInfo()`、Unity は
 `MistEngine.I.GetVersion()` / `GetBuildInfo()` を公開します。ビルド情報は JSON 文字列です。
 ラッパーのパッケージバージョンとは別に、読み込まれたエンジンを確認できます。
 
-Web でバージョンの export が見つからない場合は `@tik-choco/mistlib` を 0.7.0 以降に
-更新してください。ローカルの import map を使う場合は `just fetch 0.7.0` または
+Web でバージョンの export が見つからない場合は `@tik-choco/mistlib` を 0.7.1に
+更新してください。ローカルの import map を使う場合は `just fetch 0.7.1` または
 `just sync` を再実行してページを再読み込みしてください。古い `mistlib-wasm/pkg` には
 7 月の 0.1.0 ビルドが残っていることがあります。
+
+## イベントコード
+
+native / Web のアプリケーションイベントは共通です。Python / Web は `EVENT_<NAME>`、
+Unity は `MistLibMessageType` の PascalCase メンバーを使います。
+
+| コード | 名前 | 送信元 / ペイロード |
+| --- | --- | --- |
+| 0 | RAW | ピア / アプリケーションのバイト列 |
+| 1 | OVERLAY | ピア / overlay バイト列 |
+| 2 | PEER_CONNECTED | ピア / UTF-8 `joined` |
+| 3 | PEER_DISCONNECTED | ピア / UTF-8 `left` |
+| 4 | NEIGHBORS | `rust` / ノード一覧 JSON |
+| 5 | AOI_ENTERED | ノード / UTF-8 `entered` |
+| 6 | AOI_LEFT | ノード / UTF-8 `left` |
+| 7 | NODE_POSITION_UPDATED | ノード / 座標 JSON `{x,y,z}`（AOI 内、毎 tick） |
+| 8 | AOI_NODES | `rust` / AOI 内ノード一覧 JSON |
+| 9 | ALL_CONNECTIONS_LOST | 自ノード / `{"reason":"allConnectionsLost","connectedCount":0}` |
+| 10 | ROOM_JOINED | 空 ID / 空バイト列 |
+| 11 | ROOM_JOIN_FAILED | 空 ID / UTF-8 の理由文字列 |
+| 12 | ROOM_LEFT | 空 ID / 空バイト列 |
+
+Web 専用の media callback は別 API で、100 (`MEDIA_EVENT_TRACK_ADDED`) / 101
+(`MEDIA_EVENT_TRACK_REMOVED`) は変更ありません。native の通常 callback には届きません。
+コード 9 は接続数 >0 から 0 への遷移で一度通知し、再接続で再び有効になります。
+初期空室や明示的な退出では通知せず、ルームへの参加状態は維持します。
+
+Web の peer / AOI 入退域ペイロードは native と同じ固定文字列です。`TextDecoder` や
+Python の `.decode('utf-8')` で読み、JSON として扱わないでください。
+ルームイベントの送信元は空なので、複数ルームでは native v2 callback の room id、
+Web callback の第 4 引数、Unity の `OnRoomEvent` で識別します。
+
+Python の `EVENT_JOIN` / `EVENT_LEAVE` は `EVENT_PEER_CONNECTED` /
+`EVENT_PEER_DISCONNECTED` に改名し、alias は残しません。Unity の enum 型名は維持し、
+`Location` / `Message` は `Raw` / `Overlay` に改名しました。エンジンイベントではない
+未使用の `Heartbeat` / `RequestNodeList` / `NodeList` は削除しました。
+ルーム退出メソッドの非推奨 alias は、この変更に不要な破壊を避けるため維持します。
+
+`node scripts/check-engine-api.mjs --source` でバイナリ取得なしの検証ができます。
+公開後に `node scripts/check-engine-api.mjs 0.7.1` で配布エンジンの export と enum を検証します。
+自動更新も `scripts/engine-api.json` の指定バージョンだけを使います。
+変更履歴は [CHANGELOG.md](CHANGELOG.md) を参照してください。
 
 ## ライセンス
 
@@ -132,5 +176,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-すべてのラッパーには mistlib 0.7.0 以降が必要です。
+すべてのラッパーには mistlib 0.7.1 が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

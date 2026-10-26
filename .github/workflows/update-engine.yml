@@ -1,23 +1,7 @@
-# Keeps the examples on the newest published engine without anyone editing this
-# repository.
-#
-# The engine version is pinned, not floating, because these demos are
-# peer-to-peer: every participant has to run the same build or they cannot
-# connect, and jsDelivr caches a floating specifier in the browser for seven
-# days -- long enough for a returning visitor and a new one to end up on
-# different versions. A pin avoids that, and this workflow removes the chore
-# that a pin normally brings.
-#
-# It refuses to move the pin unless the new version still provides everything
-# wrappers/web/index.js uses. That check is the reason this can run unattended:
-# the wrapper destructures the engine's namespace object, so a removed export
-# would otherwise become `undefined` and surface as a broken demo rather than a
-# failed build. When it fails, the pin simply stays where it is and the run goes
-# red -- the examples keep working on the last version they were known to fit.
-#
-# Runs on its own schedule rather than being triggered by the engine's release,
-# so it needs no cross-repository credentials and retries by itself if npm or
-# the CDN is briefly unavailable.
+# Reconciles the demo import maps with the engine version supported by this
+# wrapper. Only scripts/engine-api.json selects the version; npm's latest tag
+# must never upgrade or downgrade the unified event contract automatically.
+# The published API and event enum values are checked before moving a pin.
 
 name: Update engine
 
@@ -44,16 +28,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Find the current and latest versions
+      - name: Find the current and supported versions
         id: versions
         run: |
           set -euo pipefail
           current=$(grep -ohE '@tik-choco/mistlib@[0-9]+\.[0-9]+\.[0-9]+' examples/web/*.html \
             | head -1 | sed 's/.*@//')
-          latest=$(npm view @tik-choco/mistlib version)
+          supported=$(node -p "require('./scripts/engine-api.json').engineVersion")
           echo "current=$current" >> "$GITHUB_OUTPUT"
-          echo "latest=$latest"   >> "$GITHUB_OUTPUT"
-          echo "pinned at $current, newest published is $latest"
+          echo "supported=$supported"   >> "$GITHUB_OUTPUT"
+          echo "pinned at $current, supported engine is $supported"
 
           # Every pin must agree, or the rewrite below would leave the repo in a
           # mixed state that is hard to notice.
@@ -63,22 +47,22 @@ jobs:
             || { echo "::error::the examples pin more than one engine version"; exit 1; }
 
       - name: Check the wrapper still fits the new version
-        if: steps.versions.outputs.current != steps.versions.outputs.latest
-        run: node scripts/check-engine-api.mjs "${{ steps.versions.outputs.latest }}"
+        if: steps.versions.outputs.current != steps.versions.outputs.supported
+        run: node scripts/check-engine-api.mjs "${{ steps.versions.outputs.supported }}"
 
       - name: Move the pin
-        if: steps.versions.outputs.current != steps.versions.outputs.latest
+        if: steps.versions.outputs.current != steps.versions.outputs.supported
         run: |
           set -euo pipefail
           from="${{ steps.versions.outputs.current }}"
-          to="${{ steps.versions.outputs.latest }}"
-          # The import maps are the only place a version is written down. The
-          # READMEs point at the package without pinning it, so they need no edit.
+          to="${{ steps.versions.outputs.supported }}"
+          # Reconcile import maps with the version already selected in the manifest.
           sed -i "s|@tik-choco/mistlib@$from|@tik-choco/mistlib@$to|g" examples/web/*.html
+          node scripts/check-engine-api.mjs --source
           git diff --stat
 
       - name: Commit
-        if: steps.versions.outputs.current != steps.versions.outputs.latest
+        if: steps.versions.outputs.current != steps.versions.outputs.supported
         run: |
           set -euo pipefail
           if git diff --quiet; then
@@ -86,8 +70,8 @@ jobs:
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "chore: move examples to @tik-choco/mistlib@${{ steps.versions.outputs.latest }}
+          git commit -am "chore: move examples to @tik-choco/mistlib@${{ steps.versions.outputs.supported }}
 
           Verified that the published build still provides every export
-          wrappers/web/index.js uses before moving the pin."
+          wrappers/web/index.js uses, including event values, before moving the pin."
           git push

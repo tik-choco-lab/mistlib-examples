@@ -51,15 +51,17 @@ const {
 
 export const EVENT_RAW = 0;
 export const EVENT_OVERLAY = 1;
-export const EVENT_NEIGHBORS = 2;
-export const EVENT_AOI_ENTERED = 3;
-export const EVENT_AOI_LEFT = 4;
-export const EVENT_PEER_CONNECTED = 5;
-export const EVENT_PEER_DISCONNECTED = 6;
-export const EVENT_AOI_NODES = 7;
-export const EVENT_ROOM_JOINED = 8;
-export const EVENT_ROOM_JOIN_FAILED = 9;
-export const EVENT_ROOM_LEFT = 10;
+export const EVENT_PEER_CONNECTED = 2;
+export const EVENT_PEER_DISCONNECTED = 3;
+export const EVENT_NEIGHBORS = 4;
+export const EVENT_AOI_ENTERED = 5;
+export const EVENT_AOI_LEFT = 6;
+export const EVENT_NODE_POSITION_UPDATED = 7;
+export const EVENT_AOI_NODES = 8;
+export const EVENT_ALL_CONNECTIONS_LOST = 9;
+export const EVENT_ROOM_JOINED = 10;
+export const EVENT_ROOM_JOIN_FAILED = 11;
+export const EVENT_ROOM_LEFT = 12;
 export const MEDIA_EVENT_TRACK_ADDED = 100;
 export const MEDIA_EVENT_TRACK_REMOVED = 101;
 export const DELIVERY_RELIABLE = 0;
@@ -88,8 +90,8 @@ function ensureWasmInitialized() {
         const missing = ['get_version', 'get_build_info'].filter(name => typeof mistWasm[name] !== 'function');
         if (missing.length) {
             throw new Error(
-                `mistlib-wasm is missing ${missing.join(', ')}; update to @tik-choco/mistlib >= 0.7.0 ` +
-                'or rerun just fetch 0.7.0 / just sync to refresh mistlib-wasm/pkg.',
+                `mistlib-wasm is missing ${missing.join(', ')}; update to @tik-choco/mistlib 0.7.1 ` +
+                'or rerun just fetch 0.7.1 / just sync to refresh mistlib-wasm/pkg.',
             );
         }
         wasmInitPromise = init().catch((err) => {
@@ -399,7 +401,7 @@ export class MistNode {
         return mist_leave_room_async(roomId);
     }
 
-    /** Leave all rooms and release the engine. Requires mistlib >= 0.7.0. */
+    /** Leave all rooms and release the engine. Requires mistlib 0.7.1. */
     leaveAllRooms() {
         mist_leave_all_rooms();
         if (activeNode === this) {

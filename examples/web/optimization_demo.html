@@ -132,7 +132,7 @@
     <script type="importmap">
         {
             "imports": {
-                "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.0/mistlib_wasm.js",
+                "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.1/mistlib_wasm.js",
                 "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
                 "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
             }
@@ -513,7 +513,7 @@
             config.aoiRange = AOI_RADIUS; // Use our AOI radius constant
             nodeObj.setConfig(config);
 
-            nodeObj.joinRoom(ROOM_ID);
+            await nodeObj.joinRoomAsync(ROOM_ID);
 
             // Loop to update our position and sync states
             setInterval(() => {

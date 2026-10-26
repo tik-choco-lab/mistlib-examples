@@ -22,7 +22,7 @@ namespace MistLib
 
         private void OnMistEvent(uint type, string from, byte[] data)
         {
-            if (type == (uint)MistLibMessageType.Location)
+            if (type == (uint)MistLibMessageType.Raw)
             {
                 BincodeReader.DeserializeLocation(data, out var objId, out _, out _, out _, out _, out _);
                 if (_objects.TryGetValue(objId, out var obj))

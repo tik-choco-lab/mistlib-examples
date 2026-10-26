@@ -18,7 +18,7 @@ except ImportError:
 from utils import decode_rust_str, load_sim_config, setup_mist_path
 
 setup_mist_path()
-from mist import MistNode, MistTransform, EVENT_RAW, EVENT_NEIGHBORS, EVENT_LEAVE, EVENT_JOIN, EVENT_AOI_NODES, DELIVERY_UNRELIABLE, default_config
+from mist import MistNode, MistTransform, EVENT_RAW, EVENT_NEIGHBORS, EVENT_PEER_DISCONNECTED, EVENT_PEER_CONNECTED, EVENT_AOI_NODES, EVENT_ALL_CONNECTIONS_LOST, EVENT_ROOM_JOINED, EVENT_ROOM_JOIN_FAILED, EVENT_ROOM_LEFT, DELIVERY_UNRELIABLE, default_config
 
 _ARG_CONFIG_MAP = {
     'max_connection_count': 'maxConnectionCount',
@@ -514,11 +514,11 @@ class MistClient:
                     to_remove = [nid for nid in self.neighbor_nodes if nid not in received_ids]
                     for nid in to_remove: del self.neighbor_nodes[nid]
                 except Exception: pass
-            elif etype == EVENT_JOIN:
+            elif etype == EVENT_PEER_CONNECTED:
                 self.connected_nodes.add(from_id)
                 self.connected_last_seen[from_id] = current_time
                 self.log("INFO", "peer_connected", peer=from_id, total_connected=len(self.connected_nodes))
-            elif etype == EVENT_LEAVE:
+            elif etype == EVENT_PEER_DISCONNECTED:
                 if from_id in self.connected_nodes: self.connected_nodes.remove(from_id)
                 self.connected_last_seen.pop(from_id, None)
                 self.peers.pop(from_id, None)
@@ -529,6 +529,18 @@ class MistClient:
                     nodes = json.loads(data_bytes.decode('utf-8'))
                     self.aoi_nodes = {n["id"]: n for n in nodes if n["id"] != self.args.id}
                 except Exception: pass
+            elif etype == EVENT_ALL_CONNECTIONS_LOST:
+                self.connected_nodes.clear()
+                self.connected_last_seen.clear()
+                self.log("WARN", "all_connections_lost", room=self.args.room)
+            elif etype == EVENT_ROOM_JOINED:
+                self.log("INFO", "room_joined", room=self.args.room)
+            elif etype == EVENT_ROOM_JOIN_FAILED:
+                reason = data_bytes.decode('utf-8')
+                print(f"[MistLib] Room join failed: {reason}")
+                self.log("ERROR", "room_join_failed", room=self.args.room, reason=reason)
+            elif etype == EVENT_ROOM_LEFT:
+                self.log("INFO", "room_left", room=self.args.room)
 
     def leave_all_rooms(self):
         if self.node: self.node.leave_all_rooms()

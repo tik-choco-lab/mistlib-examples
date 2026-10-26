@@ -105,7 +105,7 @@ namespace MistLib
         private void Start()
         {
             JoinRoom(_roomId);
-            MistLogger.Log($"MistLib {GetVersion()} initialized and joined room: {_roomId}");
+            MistLogger.Log($"MistLib {GetVersion()} initialized; joining room: {_roomId}");
         }
 
         private void OnDestroy()
@@ -127,6 +127,21 @@ namespace MistLib
 
         protected virtual void OnHandleEvent(uint type, string from, byte[] data, string roomId)
         {
+            switch ((MistLibMessageType)type)
+            {
+                case MistLibMessageType.RoomJoined:
+                    MistLogger.Info($"Joined room: {roomId}");
+                    break;
+                case MistLibMessageType.RoomJoinFailed:
+                    MistLogger.Error($"Room join failed ({roomId}): {Encoding.UTF8.GetString(data)}");
+                    break;
+                case MistLibMessageType.RoomLeft:
+                    MistLogger.Info($"Left room: {roomId}");
+                    break;
+                case MistLibMessageType.AllConnectionsLost:
+                    MistLogger.Warning($"All connections lost in room: {roomId}");
+                    break;
+            }
             OnEvent?.Invoke(type, from, data);
             OnRoomEvent?.Invoke(type, from, data, roomId);
         }
@@ -382,15 +397,15 @@ namespace MistLib
             try
             {
                 var roomBuffer = new byte[(int)roomLen];
-                Marshal.Copy(room, roomBuffer, 0, (int)roomLen);
+                if (roomBuffer.Length > 0) Marshal.Copy(room, roomBuffer, 0, roomBuffer.Length);
                 var roomId = Encoding.UTF8.GetString(roomBuffer);
 
                 var fromBuffer = new byte[(int)fromLen];
-                Marshal.Copy(from, fromBuffer, 0, (int)fromLen);
+                if (fromBuffer.Length > 0) Marshal.Copy(from, fromBuffer, 0, fromBuffer.Length);
                 var fromId = Encoding.UTF8.GetString(fromBuffer);
 
                 var dataBuffer = new byte[(int)dataLen];
-                Marshal.Copy(data, dataBuffer, 0, (int)dataLen);
+                if (dataBuffer.Length > 0) Marshal.Copy(data, dataBuffer, 0, dataBuffer.Length);
 
                 _eventQueue.Enqueue((eventType, fromId, dataBuffer, roomId));
             }

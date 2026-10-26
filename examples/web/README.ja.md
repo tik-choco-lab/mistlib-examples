@@ -2,6 +2,10 @@
 
 mistlib の Web ラッパーを使ったブラウザ向けサンプルです。
 
+エンジン 0.7.1 は [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1)
+と [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.1) で公開されています。
+セットアップと共通イベント表は [ルート README](../../README.ja.md) を参照してください。
+
 English: [README.md](README.md)
 
 - `index.html`: 3D メタバースデモ。初回アクセス時に Web Crypto API で ECDSA 鍵ペアを生成し
@@ -21,9 +25,9 @@ just serve   # または python -m http.server 8000
 
 その後 `http://localhost:8000/examples/web/index.html` を開きます。
 
-import map はエンジン 0.7.0 を指定しています。各デモは起動時にバージョンを
+import map はエンジン 0.7.1 を指定しています。各デモは起動時にバージョンを
 ブラウザのコンソール (media は画面のログ) へ表示します。ローカルビルドを使う場合は
-`just fetch 0.7.0` を実行し、import map を
+`just fetch 0.7.1` を実行し、import map を
 `../../mistlib-wasm/pkg/mistlib_wasm.js` に向けてください。バージョンの export が
 見つからない場合は古いローカル成果物を更新してください。
 
@@ -39,5 +43,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-すべてのラッパーには mistlib 0.7.0 以降が必要です。
+すべてのラッパーには mistlib 0.7.1 が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

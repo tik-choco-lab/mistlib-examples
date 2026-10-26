@@ -8,14 +8,17 @@ from typing import Literal, Optional
 
 EVENT_RAW = 0
 EVENT_OVERLAY = 1
-EVENT_JOIN = 2
-EVENT_LEAVE = 3
+EVENT_PEER_CONNECTED = 2
+EVENT_PEER_DISCONNECTED = 3
 EVENT_NEIGHBORS = 4
 EVENT_AOI_ENTERED = 5
 EVENT_AOI_LEFT = 6
 EVENT_NODE_POSITION_UPDATED = 7
 EVENT_AOI_NODES = 8
 EVENT_ALL_CONNECTIONS_LOST = 9
+EVENT_ROOM_JOINED = 10
+EVENT_ROOM_JOIN_FAILED = 11
+EVENT_ROOM_LEFT = 12
 
 DeliveryMethod = Literal[0, 1, 2, 3]
 
@@ -261,7 +264,7 @@ class MistNode:
         return self.leave_room(room_id)
 
     def leave_all_rooms(self):
-        """Leave all rooms and release this process's engine (mistlib >= 0.7.0)."""
+        """Leave all rooms and release this process's engine (mistlib 0.7.1)."""
         global _active_instance
         self.lib.leave_all_rooms()
         if _active_instance is self:

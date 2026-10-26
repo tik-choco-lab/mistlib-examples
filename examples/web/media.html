@@ -537,12 +537,12 @@
   <script type="importmap">
       {
           "imports": {
-              "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.0/mistlib_wasm.js"
+              "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.1/mistlib_wasm.js"
           }
       }
   </script>
   <script type="module">
-    import { MistNode, getVersion, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
+    import { MistNode, getVersion, EVENT_ALL_CONNECTIONS_LOST, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
 
     const roomIdInput = document.getElementById('roomId');
     const signalingUrlInput = document.getElementById('signalingUrl');
@@ -1092,7 +1092,12 @@
           });
       await node.init();
       log(`MistLib ${await getVersion()}`);
-      node.joinRoom(roomId);
+      node.onEvent((type) => {
+        if (type === EVENT_ALL_CONNECTIONS_LOST) {
+          log('All peer connections lost; the room remains joined');
+          cleanupDeadRemoteCards();
+        }
+      });
 
       node.onMediaEvent((eventType, payload) => {
         if (eventType === MEDIA_EVENT_TRACK_ADDED) {
@@ -1117,7 +1122,7 @@
           entry.card.dataset.remoteSlot = classification.slot;
           entry.card.dataset.remoteKind = remoteKind;
           localState.remoteSlots.set(slotKey, currentKey);
-          localState.node.attachMedia(entry.media, stream ?? track);
+          node.attachMedia(entry.media, stream ?? track);
           bindCardViewer(entry, {
             key: currentKey,
             title: remoteKind === 'screen' ? `${fromId} screen share` : `${fromId} ${remoteKind}`,
@@ -1138,6 +1143,12 @@
         }
       });
 
+      try {
+        await node.joinRoomAsync(roomId);
+      } catch (error) {
+        node.leaveAllRooms();
+        throw error;
+      }
       localState.node = node;
       localState.joined = true;
       nodeIdEl.textContent = nodeId;
@@ -1174,12 +1185,15 @@
     }
 
     joinBtn.addEventListener('click', async () => {
+      joinBtn.disabled = true;
       try {
         await joinRoom();
       } catch (error) {
         console.error(error);
         setStatus('join failed', false);
         log(`Join failed: ${error.message ?? error}`);
+      } finally {
+        setButtons();
       }
     });
 

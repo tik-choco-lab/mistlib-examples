@@ -8,7 +8,7 @@ default:
 # --- エンジン成果物の取得 (設定は .env / .env.example を参照) ---
 
 # GitHub リリースから全プラットフォームの成果物を取得する (gh / unzip が必要)。
-fetch version="0.7.0":
+fetch version="0.7.1":
     ./scripts/sync-mistlib.sh --release {{quote(version)}}
 
 # mistlib-dev からエンジンをビルドして成果物を配置する。
@@ -69,4 +69,5 @@ proto:
 check:
     {{py}} -m compileall -q examples/python wrappers/python
     for f in wrappers/web/*.js; do node --check "$f"; done
+    node scripts/check-engine-api.mjs --source
     @echo "OK"

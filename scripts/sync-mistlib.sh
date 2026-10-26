@@ -4,7 +4,7 @@
 # ソースからのビルド設定は .env で行う (.env.example を参照)。
 #
 #   cp .env.example .env && ./scripts/sync-mistlib.sh
-#   ./scripts/sync-mistlib.sh --release 0.7.0
+#   ./scripts/sync-mistlib.sh --release 0.7.1
 #
 # 配置先はラッパーの探索パスに合わせてある:
 #   target/release/libmistlib.so                  <- wrappers/python/mist/core.py
@@ -35,12 +35,10 @@ warn() { printf '\033[1;33m警告:\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[1;31mエラー:\033[0m %s\n' "$*" >&2; exit 1; }
 
 if [ "${1:-}" = "--release" ]; then
-    [ "$#" -eq 2 ] || die "使い方: $0 --release 0.7.0"
+    [ "$#" -eq 2 ] || die "使い方: $0 --release 0.7.1"
     version="${2#v}"
     [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || die "無効なバージョン: $version"
-    if [ "${BASH_REMATCH[1]}" -eq 0 ] && [ "${BASH_REMATCH[2]}" -lt 7 ]; then
-        die "mistlib 0.7.0 以降が必要です"
-    fi
+    [ "$version" = "0.7.1" ] || die "mistlib 0.7.1 が必要です"
     command -v gh >/dev/null 2>&1 || die "GitHub CLI (gh) が必要です"
     command -v unzip >/dev/null 2>&1 || die "unzip が必要です"
     release_dir="$(mktemp -d)"
@@ -64,7 +62,7 @@ if [ "${1:-}" = "--release" ]; then
     grep -Eq "\"version\"[[:space:]]*:[[:space:]]*\"${version//./\\.}\"" \
         "$SRC/mistlib-wasm/pkg/package.json" || die "wasm のバージョンが v$version と一致しません"
 else
-    [ "$#" -eq 0 ] || die "使い方: $0 [--release 0.7.0]"
+    [ "$#" -eq 0 ] || die "使い方: $0 [--release 0.7.1]"
 
     # --- 取得元の決定 -----------------------------------------------------------
     #
@@ -136,9 +134,11 @@ fi
 # --- 配置 -------------------------------------------------------------------
 
 [ -f "$SRC/mistlib-wasm/pkg/mistlib_wasm_bg.wasm" ] || die "wasm バイナリが見つかりません"
+grep -Eq '"version"[[:space:]]*:[[:space:]]*"0\.7\.1"' \
+    "$SRC/mistlib-wasm/pkg/package.json" || die "mistlib 0.7.1 が必要です"
 for symbol in get_version get_build_info leave_all_rooms; do
     grep -q "export function $symbol(" "$SRC/mistlib-wasm/pkg/mistlib_wasm.js" \
-        || die "wasm に $symbol がありません。mistlib 0.7.0 以降で再ビルドしてください"
+        || die "wasm に $symbol がありません。mistlib 0.7.1 で再ビルドしてください"
 done
 
 copied=0

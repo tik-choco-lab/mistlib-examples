@@ -1,8 +1,8 @@
 {
     "name": "com.tik-choco.mistlib",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "displayName": "MistLib",
-    "description": "MistLib Rust Client for Unity",
+    "description": "MistLib Rust Client for Unity (requires engine 0.7.1)",
     "license": "Apache-2.0",
     "unity": "6000.0",
     "author": {

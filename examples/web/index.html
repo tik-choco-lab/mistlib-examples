@@ -71,7 +71,7 @@
     <script type="importmap">
         {
             "imports": {
-                "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.0/mistlib_wasm.js",
+                "@tik-choco/mistlib": "https://cdn.jsdelivr.net/npm/@tik-choco/mistlib@0.7.1/mistlib_wasm.js",
                 "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
                 "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
             }
@@ -104,7 +104,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { MistNode, getVersion } from '../../wrappers/web/index.js';
+        import { MistNode, getVersion, EVENT_PEER_CONNECTED, EVENT_NODE_POSITION_UPDATED, EVENT_ALL_CONNECTIONS_LOST, EVENT_ROOM_JOINED, EVENT_ROOM_JOIN_FAILED, EVENT_ROOM_LEFT } from '../../wrappers/web/index.js';
 
         // --- Utils: SmoothDamp & Transform ---
         function smoothDamp(current, target, state, smoothTime, dt) {
@@ -227,8 +227,7 @@
         });
         await node.init();
         console.info(`MistLib ${await getVersion()}`);
-        node.joinRoom("metaverse-lobby");
-        document.getElementById('ui-status').innerText = 'Connected';
+        document.getElementById('ui-status').innerText = 'Joining...';
 
         // --- Scene & Camera ---
         const scene = new THREE.Scene();
@@ -265,6 +264,24 @@
         const loader = new GLTFLoader();
         const localPlayer = new Avatar(scene, loader, true);
         const peers = {}; // id -> Avatar
+        node.onEvent((type, fromId, payload) => {
+            if (type === EVENT_NODE_POSITION_UPDATED && fromId !== myId) {
+                const position = JSON.parse(new TextDecoder().decode(payload));
+                if (peers[fromId]) peers[fromId].transform.update(position.x, position.z);
+            } else if (type === EVENT_PEER_CONNECTED) {
+                document.getElementById('ui-status').innerText = 'Connected';
+            } else if (type === EVENT_ALL_CONNECTIONS_LOST) {
+                document.getElementById('ui-status').innerText = 'All connections lost';
+            } else if (type === EVENT_ROOM_JOINED) {
+                document.getElementById('ui-status').innerText = 'Room ready';
+            } else if (type === EVENT_ROOM_JOIN_FAILED) {
+                document.getElementById('ui-status').innerText = 'Join failed';
+                console.error(new TextDecoder().decode(payload));
+            } else if (type === EVENT_ROOM_LEFT) {
+                document.getElementById('ui-status').innerText = 'Left room';
+            }
+        });
+        node.joinRoom("metaverse-lobby");
         const keys = { w: 0, a: 0, s: 0, d: 0 };
         window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (k in keys) keys[k] = 1; });
         window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k in keys) keys[k] = 0; });

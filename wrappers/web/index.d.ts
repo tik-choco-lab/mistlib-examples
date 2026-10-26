@@ -1,16 +1,18 @@
-export const EVENT_RAW: number;
-export const EVENT_OVERLAY: number;
-export const EVENT_NEIGHBORS: number;
-export const EVENT_AOI_ENTERED: number;
-export const EVENT_AOI_LEFT: number;
-export const EVENT_PEER_CONNECTED: number;
-export const EVENT_PEER_DISCONNECTED: number;
-export const EVENT_AOI_NODES: number;
-export const EVENT_ROOM_JOINED: number;
-export const EVENT_ROOM_JOIN_FAILED: number;
-export const EVENT_ROOM_LEFT: number;
-export const MEDIA_EVENT_TRACK_ADDED: number;
-export const MEDIA_EVENT_TRACK_REMOVED: number;
+export const EVENT_RAW: 0;
+export const EVENT_OVERLAY: 1;
+export const EVENT_PEER_CONNECTED: 2;
+export const EVENT_PEER_DISCONNECTED: 3;
+export const EVENT_NEIGHBORS: 4;
+export const EVENT_AOI_ENTERED: 5;
+export const EVENT_AOI_LEFT: 6;
+export const EVENT_NODE_POSITION_UPDATED: 7;
+export const EVENT_AOI_NODES: 8;
+export const EVENT_ALL_CONNECTIONS_LOST: 9;
+export const EVENT_ROOM_JOINED: 10;
+export const EVENT_ROOM_JOIN_FAILED: 11;
+export const EVENT_ROOM_LEFT: 12;
+export const MEDIA_EVENT_TRACK_ADDED: 100;
+export const MEDIA_EVENT_TRACK_REMOVED: 101;
 export const DELIVERY_RELIABLE: 0;
 export const DELIVERY_UNRELIABLE_ORDERED: 1;
 export const DELIVERY_UNRELIABLE: 2;
@@ -81,7 +83,7 @@ export class MistNode {
     leaveRoom(): void;
     /** @deprecated Use leaveRoom(roomId). */
     leaveRoomId(roomId: string): void;
-    /** Requires mistlib >= 0.7.0. */
+    /** Requires mistlib 0.7.1. */
     leaveAllRooms(): void;
     updatePosition(x: number, y: number, z?: number, roomId?: string): void;
 

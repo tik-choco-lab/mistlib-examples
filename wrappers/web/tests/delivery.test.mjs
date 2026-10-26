@@ -24,11 +24,11 @@ before(async () => {
     await writeFile(join(engineDir, 'index.js'), `
         export const calls = [];
         export default async function initialize() {}
-        ${[...required, 'set_local_track_audience'].filter(name => name !== 'default').map(name =>
+        ${required.filter(name => name !== 'default').map(name =>
             `export function ${name}(...args) {
                 calls.push(['${name}', ...args]);
-                if ('${name}' === 'get_version') return '0.7.0';
-                if ('${name}' === 'get_build_info') return '{"version":"0.7.0","target":"wasm32-unknown-unknown"}';
+                if ('${name}' === 'get_version') return '0.7.1';
+                if ('${name}' === 'get_build_info') return '{"version":"0.7.1","target":"wasm32-unknown-unknown"}';
                 if ('${name}' === 'init_with_config' || '${name}' === 'set_log_level') return true;
                 if ('${name}' === 'leave_room_async') return Promise.resolve();
             }`
@@ -45,6 +45,27 @@ test('public codes preserve 0–2 and add ReliableUnordered = 3', () => {
         wrapper.DELIVERY_RELIABLE, wrapper.DELIVERY_UNRELIABLE_ORDERED,
         wrapper.DELIVERY_UNRELIABLE, wrapper.DELIVERY_RELIABLE_UNORDERED,
     ], [0, 1, 2, 3]);
+});
+
+test('public event codes match the unified 0.7.1 table', () => {
+    assert.deepEqual(Object.fromEntries(Object.entries(wrapper).filter(
+        ([name]) => /^(MEDIA_)?EVENT_/.test(name))), {
+        EVENT_RAW: 0,
+        EVENT_OVERLAY: 1,
+        EVENT_PEER_CONNECTED: 2,
+        EVENT_PEER_DISCONNECTED: 3,
+        EVENT_NEIGHBORS: 4,
+        EVENT_AOI_ENTERED: 5,
+        EVENT_AOI_LEFT: 6,
+        EVENT_NODE_POSITION_UPDATED: 7,
+        EVENT_AOI_NODES: 8,
+        EVENT_ALL_CONNECTIONS_LOST: 9,
+        EVENT_ROOM_JOINED: 10,
+        EVENT_ROOM_JOIN_FAILED: 11,
+        EVENT_ROOM_LEFT: 12,
+        MEDIA_EVENT_TRACK_ADDED: 100,
+        MEDIA_EVENT_TRACK_REMOVED: 101,
+    });
 });
 
 test('all codes reach default and room-scoped engine sends unchanged', () => {
@@ -106,9 +127,9 @@ test('leaveAllRooms releases the engine for another node', async () => {
 
 test('metadata reads the loaded engine without claiming a node', async () => {
     calls.length = 0;
-    assert.equal(await wrapper.getVersion(), '0.7.0');
+    assert.equal(await wrapper.getVersion(), '0.7.1');
     assert.deepEqual(JSON.parse(await wrapper.getBuildInfo()), {
-        version: '0.7.0', target: 'wasm32-unknown-unknown',
+        version: '0.7.1', target: 'wasm32-unknown-unknown',
     });
     assert.deepEqual(calls, [['get_version'], ['get_build_info']]);
     const other = new wrapper.MistNode('metadata', 'ws://localhost');
@@ -131,12 +152,12 @@ test('missing metadata exports explain how to refresh a stale engine', async () 
         for (const read of [old.getVersion, old.getBuildInfo]) {
             await assert.rejects(read(), error => {
                 assert.match(error.message, new RegExp(missing));
-                assert.match(error.message, /@tik-choco\/mistlib >= 0\.7\.0/);
-                assert.match(error.message, /just fetch 0\.7\.0 \/ just sync/);
+                assert.match(error.message, /@tik-choco\/mistlib 0\.7\.1/);
+                assert.match(error.message, /just fetch 0\.7\.1 \/ just sync/);
                 return true;
             });
         }
-        await assert.rejects(new old.MistNode('stale', 'ws://localhost').init(), /0\.7\.0/);
+        await assert.rejects(new old.MistNode('stale', 'ws://localhost').init(), /0\.7\.1/);
     }
 });
 
@@ -191,4 +212,44 @@ test('storage pin and KV APIs forward bytes and keys to the engine', async () =>
         ['storage_add_pinned', 'name', bytes], ['storage_kv_set', 'key', bytes],
         ['storage_kv_get', 'key'], ['storage_kv_delete', 'key'],
     ]);
+});
+
+test('unified callbacks preserve codes, fixed strings, JSON, empty bytes and room ids', async () => {
+    calls.length = 0;
+    await node.init();
+    const callback = calls.find(([name]) => name === 'register_event_callback')[1];
+    const received = [];
+    node.onEvent((...args) => received.push(args));
+    const events = [
+        [0, 'peer', new Uint8Array([0, 255])],
+        [1, 'peer', new TextEncoder().encode('overlay')],
+        [2, 'peer', new TextEncoder().encode('joined')],
+        [3, 'peer', new TextEncoder().encode('left')],
+        [4, 'rust', new TextEncoder().encode('[]')],
+        [5, 'peer', new TextEncoder().encode('entered')],
+        [6, 'peer', new TextEncoder().encode('left')],
+        [7, 'peer', new TextEncoder().encode('{"x":1,"y":2,"z":3}')],
+        [8, 'rust', new TextEncoder().encode('[]')],
+        [9, 'self', new TextEncoder().encode('{"reason":"allConnectionsLost","connectedCount":0}')],
+        [10, '', new Uint8Array()],
+        [11, '', new TextEncoder().encode('join cancelled')],
+        [12, '', new Uint8Array()],
+    ];
+    for (const args of events) callback(...args, 'room-1');
+    assert.deepEqual(received, events.map(args => [...args, 'room-1']));
+
+    received.length = 0;
+    node.onRawMessage((...args) => received.push(args));
+    for (const args of events) callback(...args, 'room-1');
+    assert.deepEqual(received, [['peer', events[0][2], 'room-1']]);
+
+    const mediaCallback = calls.find(([name]) => name === 'register_media_event_callback')[1];
+    const media = [];
+    node.onMediaEvent((...args) => media.push(args));
+    const track = {}, stream = {};
+    for (const code of [100, 101]) mediaCallback(code, 'peer', 'track', 'video', track, stream);
+    assert.deepEqual(media, [100, 101].map(code => [code, {
+        fromId: 'peer', trackId: 'track', kind: 'video', track, stream,
+    }]));
+    node.leaveAllRooms();
 });

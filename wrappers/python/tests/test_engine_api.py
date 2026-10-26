@@ -28,8 +28,8 @@ class EngineApiTests(unittest.TestCase):
         self.node.lib = Mock()
 
     def test_metadata_queries_size_then_reads_exact_utf8_bytes(self):
-        info = json.dumps({'version': '0.7.0', 'target': '日本語', 'extra': 'x' * 8192}, ensure_ascii=False)
-        for name, value in [('get_version', '0.7.0'), ('get_build_info', info)]:
+        info = json.dumps({'version': '0.7.1', 'target': '日本語', 'extra': 'x' * 8192}, ensure_ascii=False)
+        for name, value in [('get_version', '0.7.1'), ('get_build_info', info)]:
             with self.subTest(name=name):
                 fn = output_function(value)
                 setattr(self.node.lib, name, fn)
@@ -40,13 +40,13 @@ class EngineApiTests(unittest.TestCase):
 
     def test_module_metadata_does_not_create_a_node(self):
         lib = self.node.lib
-        lib.get_version = output_function('0.7.0')
-        lib.get_build_info = output_function('{"version":"0.7.0"}')
+        lib.get_version = output_function('0.7.1')
+        lib.get_build_info = output_function('{"version":"0.7.1"}')
         with patch('mist.core.os.path.exists', return_value=True), \
              patch('mist.core.ctypes.CDLL', return_value=lib), \
              patch('mist.core._active_instance', None):
-            self.assertEqual(mist.get_version(), '0.7.0')
-            self.assertEqual(json.loads(mist.get_build_info()), {'version': '0.7.0'})
+            self.assertEqual(mist.get_version(), '0.7.1')
+            self.assertEqual(json.loads(mist.get_build_info()), {'version': '0.7.1'})
             self.assertIsNone(mist.core._active_instance)
         for fn in (lib.get_version, lib.get_build_info):
             self.assertEqual(fn.argtypes, [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t])
@@ -86,6 +86,48 @@ class EngineApiTests(unittest.TestCase):
         self.node.lib.storage_add.return_value = 0
         with self.assertRaises(RuntimeError):
             self.node.storage_add('name', b'data')
+
+
+class EventTests(unittest.TestCase):
+    def test_public_event_table(self):
+        names = [
+            'RAW', 'OVERLAY', 'PEER_CONNECTED', 'PEER_DISCONNECTED', 'NEIGHBORS',
+            'AOI_ENTERED', 'AOI_LEFT', 'NODE_POSITION_UPDATED', 'AOI_NODES',
+            'ALL_CONNECTIONS_LOST', 'ROOM_JOINED', 'ROOM_JOIN_FAILED', 'ROOM_LEFT',
+        ]
+        self.assertEqual(
+            {name: value for name, value in vars(mist).items() if name.startswith('EVENT_')
+             and isinstance(value, int)},
+            {'EVENT_' + name: code for code, name in enumerate(names)},
+        )
+        self.assertFalse(hasattr(mist, 'EVENT_JOIN'))
+        self.assertFalse(hasattr(mist, 'EVENT_LEAVE'))
+
+    def test_native_v2_callbacks_preserve_room_and_payload(self):
+        node = mist.MistNode.__new__(mist.MistNode)
+        node.lib = Mock()
+        received = []
+
+        def on_event(code, room, room_len, sender, sender_len, data, data_len):
+            received.append((code, ctypes.string_at(room, room_len),
+                             ctypes.string_at(sender, sender_len),
+                             ctypes.string_at(data, data_len)))
+
+        node.register_callbacks(lambda level, data, size: None, on_event)
+        callback = node.lib.register_event_callback_v2.call_args.args[0]
+        events = [
+            (2, b'peer', b'joined'), (3, b'peer', b'left'),
+            (5, b'peer', b'entered'), (6, b'peer', b'left'),
+            (7, b'peer', b'{"x":1,"y":2,"z":3}'),
+            (9, b'self', b'{"reason":"allConnectionsLost","connectedCount":0}'),
+            (10, b'', b''), (11, b'', b'join cancelled'), (12, b'', b''),
+        ]
+        for code, sender, payload in events:
+            buffers = [(ctypes.c_uint8 * len(value)).from_buffer_copy(value)
+                       for value in (b'room-1', sender, payload)]
+            callback(code, buffers[0], 6, buffers[1], len(sender), buffers[2], len(payload))
+        self.assertEqual(received, [(code, b'room-1', sender, payload)
+                                   for code, sender, payload in events])
 
 
 if __name__ == '__main__':

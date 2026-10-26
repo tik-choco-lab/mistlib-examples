@@ -19,7 +19,7 @@ namespace MistLib
             Unreliable = 2,
             /// <summary>
             /// Fully reliable without ordering guarantees. Falls back to the reliable
-            /// ordered channel when the peer lacks support. Requires the upcoming mistlib release.
+            /// ordered channel when the peer lacks support.
             /// </summary>
             ReliableUnordered = 3
         }
@@ -105,7 +105,7 @@ namespace MistLib
         private void Start()
         {
             JoinRoom(_roomId);
-            MistLogger.Log($"Engine initialized and joined room: {_roomId}");
+            MistLogger.Log($"MistLib {GetVersion()} initialized and joined room: {_roomId}");
         }
 
         private void OnDestroy()
@@ -173,6 +173,7 @@ namespace MistLib
         public void LeaveRoom(string roomId)
         {
             var bytes = Encoding.UTF8.GetBytes(roomId);
+            // Native 0.7 still uses leave_room_id for per-room leave.
             PinAndCall(bytes, (ptr, len) => MistFFI.leave_room_id(ptr, len));
         }
 
@@ -214,6 +215,27 @@ namespace MistLib
                     MistFFI.send_message(idPtr, idLen, dataPtr, dataLen, (uint)method);
                 });
             });
+        }
+
+        public string GetVersion() => ReadBuildString(MistFFI.get_version);
+
+        /// <summary>Return the loaded native engine's build information as a JSON string.</summary>
+        public string GetBuildInfo() => ReadBuildString(MistFFI.get_build_info);
+
+        private static string ReadBuildString(Func<IntPtr, UIntPtr, uint> call)
+        {
+            uint required = call(IntPtr.Zero, UIntPtr.Zero);
+            if (required == 0)
+            {
+                return string.Empty;
+            }
+            var buffer = new byte[required];
+            uint written = PinBufferAndCall(buffer, (UIntPtr)buffer.Length, call);
+            if (written > buffer.Length)
+            {
+                throw new InvalidOperationException("MistLib build information grew between size query and read.");
+            }
+            return Encoding.UTF8.GetString(buffer, 0, (int)written);
         }
 
         public string GetStats()

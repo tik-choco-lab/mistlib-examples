@@ -14,7 +14,7 @@ Install the dependencies and place the engine binary (see the [root README](../.
 
 ```sh
 just deps
-just sync
+just fetch 0.7.0
 ```
 
 Then run a sample from the repository root:
@@ -24,6 +24,8 @@ python examples/python/gui_client.py --id my-node --room demo-room
 ```
 
 Or via `just`: `just gui`, `just cli`, `just bot` (headless).
+
+The samples print the loaded engine version at startup. MistLib 0.7.0 or later is required.
 
 ## Options
 
@@ -45,5 +47,4 @@ Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
 `node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
 The first operation leaves one room; the second leaves all rooms.
-The all-room API requires mistlib 0.7.0 or later; Python warns and falls back
-when loading an older native library. No-argument room-leave calls are deprecated.
+All wrappers require mistlib 0.7.0 or later. No-argument room-leave calls are deprecated.

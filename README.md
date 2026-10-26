@@ -28,8 +28,15 @@ they are published by [mistlib](https://github.com/tik-choco-lab/mistlib):
   [each release](https://github.com/tik-choco-lab/mistlib/releases/latest) as
   `mistlib-native-<platform>-<version>.zip`.
 
-Drop them at the paths below, or let the helper script do it if you have a checkout of the
-engine sources:
+All wrappers require **MistLib 0.7.0 or later**. Download the 0.7.0 release artifacts
+with GitHub CLI (`gh`) and `unzip` installed:
+
+```sh
+just fetch 0.7.0        # or ./scripts/sync-mistlib.sh --release 0.7.0
+```
+
+This installs WASM and the Linux x86_64, Windows x86_64 and macOS aarch64 native
+libraries at the paths below. To build from engine sources instead:
 
 ```sh
 cp .env.example .env   # configure the source repository and branch
@@ -56,6 +63,7 @@ We use [just](https://github.com/casey/just). Run `just` to list the recipes.
 
 | Command | Description |
 | --- | --- |
+| `just fetch 0.7.0` | Download and place the release artifacts (no Rust build needed) |
 | `just sync` | Build the engine and place the artifacts |
 | `just sync-fast` | Skip the build and only copy existing artifacts |
 | `just serve` | Start an HTTP server for the web samples |
@@ -90,16 +98,27 @@ Set it explicitly to use your own.
 | 2 | Unreliable | May drop or reorder messages (default) |
 | 3 | ReliableUnordered | Fully reliable, unordered |
 
-Code 3 requires the upcoming mistlib release. When a peer lacks the capability,
-the engine uses its reliable ordered channel. Codes 0–2 are unchanged.
+Code 3 is available in mistlib 0.7.0. When a peer lacks the capability,
+the engine uses its reliable ordered channel.
 
 Python and Web export `DELIVERY_RELIABLE` (0), `DELIVERY_UNRELIABLE_ORDERED` (1),
 `DELIVERY_UNRELIABLE` (2), and `DELIVERY_RELIABLE_UNORDERED` (3). Unity exposes
 `MistEngine.DeliveryMethod` with the method names above.
 
-The upcoming engine also supplies the `storageTransfer` CP50 defaults; wrappers
+MistLib 0.7.0 also supplies the `storageTransfer` CP50 defaults; wrappers
 pass configuration through without needing to set them. The flat FFI JSON key is
 `storageTransfer` (the full engine configuration uses `storage.transfer`).
+
+## Engine version
+
+Python exposes `get_version()` / `get_build_info()` both on `mist` and `MistNode`.
+Web exposes async `getVersion()` / `getBuildInfo()`; Unity exposes
+`MistEngine.I.GetVersion()` / `GetBuildInfo()`. Build information is a JSON string.
+These report the loaded engine, independently of the wrapper package version.
+
+If Web reports a missing version export, update `@tik-choco/mistlib` to >= 0.7.0.
+For a local import map, rerun `just fetch 0.7.0` or `just sync` and reload the page;
+older `mistlib-wasm/pkg` directories can still contain the July 0.1.0 build.
 
 ## License
 
@@ -111,5 +130,4 @@ Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
 `node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
 The first operation leaves one room; the second leaves all rooms.
-The all-room API requires mistlib 0.7.0 or later; Python warns and falls back
-when loading an older native library. No-argument room-leave calls are deprecated.
+All wrappers require mistlib 0.7.0 or later. No-argument room-leave calls are deprecated.

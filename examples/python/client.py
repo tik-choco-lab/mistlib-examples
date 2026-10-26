@@ -188,6 +188,7 @@ class MistClient:
 
         self.node.register_callbacks(self.on_log, self.on_event)
         self.node.init()
+        print(f"[MistLib] Engine {self.node.get_version()}")
         self.node.join_room(self.args.room)
         try:
             _cfg = json.loads(self.node.get_config())

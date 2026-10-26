@@ -24,8 +24,14 @@ before(async () => {
     await writeFile(join(engineDir, 'index.js'), `
         export const calls = [];
         export default async function initialize() {}
-        ${required.filter(name => name !== 'default').map(name =>
-            `export function ${name}(...args) { calls.push(['${name}', ...args]); }`
+        ${[...required, 'set_local_track_audience'].filter(name => name !== 'default').map(name =>
+            `export function ${name}(...args) {
+                calls.push(['${name}', ...args]);
+                if ('${name}' === 'get_version') return '0.7.0';
+                if ('${name}' === 'get_build_info') return '{"version":"0.7.0","target":"wasm32-unknown-unknown"}';
+                if ('${name}' === 'init_with_config' || '${name}' === 'set_log_level') return true;
+                if ('${name}' === 'leave_room_async') return Promise.resolve();
+            }`
         ).join('\n')}
     `);
     wrapper = await import(pathToFileURL(join(dir, 'index.js')).href);
@@ -96,4 +102,93 @@ test('leaveAllRooms releases the engine for another node', async () => {
     await other.init();
     assert.equal(other.initialized, true);
     other.leaveAllRooms();
+});
+
+test('metadata reads the loaded engine without claiming a node', async () => {
+    calls.length = 0;
+    assert.equal(await wrapper.getVersion(), '0.7.0');
+    assert.deepEqual(JSON.parse(await wrapper.getBuildInfo()), {
+        version: '0.7.0', target: 'wasm32-unknown-unknown',
+    });
+    assert.deepEqual(calls, [['get_version'], ['get_build_info']]);
+    const other = new wrapper.MistNode('metadata', 'ws://localhost');
+    await other.init();
+    other.leaveAllRooms();
+});
+
+test('missing metadata exports explain how to refresh a stale engine', async () => {
+    const source = await readFile(join(dir, 'index.js'), 'utf8');
+    for (const missing of ['get_version', 'get_build_info']) {
+        const engineName = `old-${missing}.mjs`;
+        const metadata = ['get_version', 'get_build_info'].filter(name => name !== missing);
+        await writeFile(join(dir, engineName), `
+            export default async function init() { throw new Error('must reject before initialization'); }
+            ${metadata.map(name => `export function ${name}() {}`).join('\n')}
+        `);
+        const wrapperName = `wrapper-${missing}.mjs`;
+        await writeFile(join(dir, wrapperName), source.replace("'@tik-choco/mistlib'", `'./${engineName}'`));
+        const old = await import(pathToFileURL(join(dir, wrapperName)).href);
+        for (const read of [old.getVersion, old.getBuildInfo]) {
+            await assert.rejects(read(), error => {
+                assert.match(error.message, new RegExp(missing));
+                assert.match(error.message, /@tik-choco\/mistlib >= 0\.7\.0/);
+                assert.match(error.message, /just fetch 0\.7\.0 \/ just sync/);
+                return true;
+            });
+        }
+        await assert.rejects(new old.MistNode('stale', 'ws://localhost').init(), /0\.7\.0/);
+    }
+});
+
+test('audience preserves all peers, nobody and explicit peer ids', () => {
+    calls.length = 0;
+    node.setLocalTrackAudience('track', null);
+    node.setLocalTrackAudience('track');
+    node.setLocalTrackAudience('track', []);
+    node.setLocalTrackAudience('track', ['相手']);
+    assert.deepEqual(calls, [
+        ['set_local_track_audience', 'track', null],
+        ['set_local_track_audience', 'track', undefined],
+        ['set_local_track_audience', 'track', []],
+        ['set_local_track_audience', 'track', ['相手']],
+    ]);
+});
+
+test('async leave waits for the engine cleanup promise', async () => {
+    calls.length = 0;
+    await node.leaveRoomAsync('room-1');
+    assert.deepEqual(calls, [['leave_room_async', 'room-1']]);
+});
+
+test('log level and config initialization use 0.7 exports', async () => {
+    calls.length = 0;
+    assert.equal(await wrapper.setLogLevel('debug'), true);
+    const configured = new wrapper.MistNode('configured', { signaling: { mode: 'websocket' } });
+    await configured.init();
+    assert.deepEqual(calls[0], ['set_log_level', 'debug']);
+    assert.equal(calls[1][0], 'init_with_config');
+    assert.equal(calls[1][1], 'configured');
+    configured.leaveAllRooms();
+});
+
+test('storage pin and KV APIs forward bytes and keys to the engine', async () => {
+    calls.length = 0;
+    const bytes = new Uint8Array([0, 255]);
+    await wrapper.storage_add('name', bytes);
+    await wrapper.storage_get('cid');
+    await wrapper.storage_add_at('name', bytes, 1, 2, 3);
+    await wrapper.storage_pin('cid');
+    await wrapper.storage_unpin('cid');
+    await wrapper.storage_is_pinned('cid');
+    await wrapper.storage_add_pinned('name', bytes);
+    await wrapper.storage_kv_set('key', bytes);
+    await wrapper.storage_kv_get('key');
+    await wrapper.storage_kv_delete('key');
+    assert.deepEqual(calls, [
+        ['storage_add', 'name', bytes], ['storage_get', 'cid'],
+        ['storage_add_at', 'name', bytes, 1, 2, 3], ['storage_pin', 'cid'],
+        ['storage_unpin', 'cid'], ['storage_is_pinned', 'cid'],
+        ['storage_add_pinned', 'name', bytes], ['storage_kv_set', 'key', bytes],
+        ['storage_kv_get', 'key'], ['storage_kv_delete', 'key'],
+    ]);
 });

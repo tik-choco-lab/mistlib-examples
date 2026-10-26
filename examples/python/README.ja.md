@@ -14,7 +14,7 @@ English: [README.md](README.md)
 
 ```sh
 just deps
-just sync
+just fetch 0.7.0
 ```
 
 リポジトリのルートから実行します。
@@ -24,6 +24,8 @@ python examples/python/gui_client.py --id my-node --room demo-room
 ```
 
 `just` からも起動できます: `just gui`, `just cli`, `just bot` (headless)。
+
+サンプルは起動時に読み込んだエンジンのバージョンを表示します。MistLib 0.7.0 以降が必要です。
 
 ## オプション
 
@@ -45,6 +47,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-全ルーム退出 API には mistlib 0.7.0 以降が必要です。Python は古いネイティブ
-ライブラリを読み込むと警告を出し、従来の関数にフォールバックします。
+すべてのラッパーには mistlib 0.7.0 以降が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

@@ -23,11 +23,13 @@ const {
     send_message: mist_send_message,
     send_message_in_room: mist_send_message_in_room,
     leave_room: mist_leave_room,
+    leave_room_async: mist_leave_room_async,
     leave_all_rooms: mist_leave_all_rooms,
     register_event_callback: mist_register_event_callback,
     register_media_event_callback: mist_register_media_event_callback,
     register_local_track: mist_register_local_track,
     get_local_track: mist_get_local_track,
+    set_local_track_audience: mist_set_local_track_audience,
     publish_local_track: mist_publish_local_track,
     unpublish_local_track: mist_unpublish_local_track,
     remove_local_track: mist_remove_local_track,
@@ -43,6 +45,8 @@ const {
     storage_kv_get: mist_storage_kv_get,
     storage_kv_delete: mist_storage_kv_delete,
     get_version: mist_get_version,
+    get_build_info: mist_get_build_info,
+    set_log_level: mist_set_log_level,
 } = mistWasm;
 
 export const EVENT_RAW = 0;
@@ -61,9 +65,7 @@ export const MEDIA_EVENT_TRACK_REMOVED = 101;
 export const DELIVERY_RELIABLE = 0;
 export const DELIVERY_UNRELIABLE_ORDERED = 1;
 export const DELIVERY_UNRELIABLE = 2;
-/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers.
- * Requires the upcoming mistlib release.
- */
+/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers. */
 export const DELIVERY_RELIABLE_UNORDERED = 3;
 export const storage_add = mist_storage_add;
 export const storage_get = mist_storage_get;
@@ -83,6 +85,13 @@ let wasmInitPromise = null;
 
 function ensureWasmInitialized() {
     if (!wasmInitPromise) {
+        const missing = ['get_version', 'get_build_info'].filter(name => typeof mistWasm[name] !== 'function');
+        if (missing.length) {
+            throw new Error(
+                `mistlib-wasm is missing ${missing.join(', ')}; update to @tik-choco/mistlib >= 0.7.0 ` +
+                'or rerun just fetch 0.7.0 / just sync to refresh mistlib-wasm/pkg.',
+            );
+        }
         wasmInitPromise = init().catch((err) => {
             wasmInitPromise = null;
             throw err;
@@ -95,6 +104,18 @@ function ensureWasmInitialized() {
 export async function getVersion() {
     await ensureWasmInitialized();
     return mist_get_version();
+}
+
+/** Returns build information as JSON from the loaded mistlib WASM binary. */
+export async function getBuildInfo() {
+    await ensureWasmInitialized();
+    return mist_get_build_info();
+}
+
+/** Configure logging before the first node initialization. */
+export async function setLogLevel(level) {
+    await ensureWasmInitialized();
+    return mist_set_log_level(level);
 }
 
 export class MistNode {
@@ -121,9 +142,6 @@ export class MistNode {
         this._initPromise = (async () => {
             await ensureWasmInitialized();
             if (this.config) {
-                if (typeof mist_init_with_config !== 'function') {
-                    throw new Error("mistlib-wasm init_with_config export is missing; rebuild mistlib-wasm/pkg before using options object initialization.");
-                }
                 const ok = mist_init_with_config(this.nodeId, JSON.stringify(this.config));
                 if (!ok) {
                     throw new Error("mistlib-wasm rejected MistNode options.");
@@ -261,8 +279,7 @@ export class MistNode {
     /**
      * Send with code 0 (ReliableOrdered), 1 (UnreliableOrdered), 2 (Unreliable,
      * default), or 3 (ReliableUnordered, fully reliable without ordering).
-     * Code 3 requires the upcoming engine release and falls back to reliable
-     * ordered when the peer lacks support.
+     * Code 3 falls back to reliable ordered when the peer lacks support.
      * @param {0 | 1 | 2 | 3} [delivery=2] Delivery guarantee.
      */
     sendMessage(toId, payload, delivery = DELIVERY_UNRELIABLE, roomId) {
@@ -324,6 +341,10 @@ export class MistNode {
         return mist_get_local_track(trackId) ?? null;
     }
 
+    setLocalTrackAudience(trackId, nodeIds) {
+        mist_set_local_track_audience(trackId, nodeIds);
+    }
+
     publishLocalTrack(trackId) {
         mist_publish_local_track(trackId);
     }
@@ -371,6 +392,11 @@ export class MistNode {
     leaveRoomId(roomId) {
         console.warn('leaveRoomId() is deprecated; use leaveRoom(roomId).');
         return this.leaveRoom(roomId);
+    }
+
+    /** Leave one room and wait for signaling and transport cleanup. */
+    leaveRoomAsync(roomId) {
+        return mist_leave_room_async(roomId);
     }
 
     /** Leave all rooms and release the engine. Requires mistlib >= 0.7.0. */

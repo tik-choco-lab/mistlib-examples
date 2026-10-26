@@ -49,10 +49,8 @@ class RoomLeaveTests(unittest.TestCase):
         self.active.start()
         self.addCleanup(self.active.stop)
 
-    def make_node(self, legacy=False):
+    def make_node(self):
         lib = Mock()
-        if legacy:
-            del lib.leave_all_rooms
         with patch("mist.core.os.path.exists", return_value=True), \
              patch("mist.core.ctypes.CDLL", return_value=lib):
             node = mist.MistNode("sender", "ws://localhost")
@@ -83,17 +81,15 @@ class RoomLeaveTests(unittest.TestCase):
         lib.leave_room.assert_not_called()
         self.assertIsNone(mist.core._active_instance)
 
-    def test_older_library_fallback(self):
-        with self.assertWarnsRegex(RuntimeWarning, r"0\.7\.0.*falling back"):
-            node, lib = self.make_node(legacy=True)
-        self.assertEqual(lib.leave_room.argtypes, [])
-        self.assertIsNone(lib.leave_room.restype)
-        node.leave_room("room-1")
-        lib.leave_room_id.assert_called_once_with(b"room-1", 6)
-        lib.leave_room.assert_not_called()
-        node.leave_all_rooms()
-        lib.leave_room.assert_called_once_with()
+    def test_older_library_is_rejected(self):
+        lib = Mock()
+        del lib.leave_all_rooms
+        with patch("mist.core.os.path.exists", return_value=True), \
+             patch("mist.core.ctypes.CDLL", return_value=lib):
+            with self.assertRaises(AttributeError):
+                mist.MistNode("sender", "ws://localhost")
         self.assertIsNone(mist.core._active_instance)
+        lib.leave_room.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -65,6 +65,12 @@ namespace MistLib
         public static extern void send_message_in_room(IntPtr roomPtr, UIntPtr roomLen, IntPtr targetPtr, UIntPtr targetLen, IntPtr dataPtr, UIntPtr dataLen, uint method);
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern uint get_version(IntPtr buffer, UIntPtr bufferLen);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern uint get_build_info(IntPtr buffer, UIntPtr bufferLen);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern uint get_stats(IntPtr buffer, UIntPtr bufferLen);
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]

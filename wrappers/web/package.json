@@ -1,6 +1,6 @@
 {
     "name": "@tik-choco/mistlib-web",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Thin browser wrapper around @tik-choco/mistlib for web applications",
     "type": "module",
     "license": "Apache-2.0",

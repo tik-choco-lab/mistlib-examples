@@ -42,6 +42,36 @@ else:
 DEFAULT_NOSTR_RELAY_URL = "ws://127.0.0.1:7777"
 
 
+def _load_library():
+    if not os.path.exists(DLL_PATH):
+        raise FileNotFoundError(f"DLL not found: {DLL_PATH}")
+    lib = ctypes.CDLL(DLL_PATH)
+    for name in ("get_version", "get_build_info"):
+        fn = getattr(lib, name)
+        fn.argtypes = [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
+        fn.restype = ctypes.c_uint32
+    return lib
+
+
+def _read_build_string(fn):
+    required = fn(None, 0)
+    buffer = (ctypes.c_uint8 * required)()
+    written = fn(buffer, len(buffer))
+    if written > len(buffer):
+        raise RuntimeError("mistlib build information grew between size query and read")
+    return bytes(buffer[:written]).decode('utf-8')
+
+
+def get_version():
+    """Return the loaded native engine version without initializing a node."""
+    return _read_build_string(_load_library().get_version)
+
+
+def get_build_info():
+    """Return the loaded native engine's build information as a JSON string."""
+    return _read_build_string(_load_library().get_build_info)
+
+
 # `inviteSalt` and `inviteCode` are deliberately absent: together they derive the
 # secret that scopes discovery, so every deployment sharing them shares one
 # namespace and one admission secret. Shipping defaults here meant every app
@@ -123,10 +153,7 @@ class MistNode:
                 "before initializing another node."
             )
 
-        if not os.path.exists(DLL_PATH):
-            raise FileNotFoundError(f"DLL not found: {DLL_PATH}")
-
-        self.lib = ctypes.CDLL(DLL_PATH)
+        self.lib = _load_library()
         self.node_id = node_id
         self.signaling_url = signaling_url
         self.config = default_config() if signaling_url is None and config is None else config
@@ -143,24 +170,26 @@ class MistNode:
         self.lib.update_position_in_room.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_float, ctypes.c_float, ctypes.c_float]
         self.lib.send_message.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32]
         self.lib.send_message_in_room.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32]
-        try:
-            self._leave_all_rooms = self.lib.leave_all_rooms
-        except AttributeError:
-            warnings.warn(
-                "Loaded mistlib lacks leave_all_rooms (requires mistlib >= 0.7.0); "
-                "falling back to deprecated native leave_room(). Upgrade the native library.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            self._leave_all_rooms = self.lib.leave_room
-        self._leave_all_rooms.argtypes = []
-        self._leave_all_rooms.restype = None
+        self.lib.leave_all_rooms.argtypes = []
+        self.lib.leave_all_rooms.restype = None
+        # Native 0.7 still uses leave_room_id for per-room leave.
         self.lib.leave_room_id.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+        self.lib.leave_room_id.restype = None
         self.lib.get_stats.argtypes = [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
         self.lib.get_stats.restype = ctypes.c_uint32
         self.lib.get_config.argtypes = [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
         self.lib.get_config.restype = ctypes.c_uint32
         self.lib.set_config.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+        self.lib.storage_add.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
+        self.lib.storage_add.restype = ctypes.c_uint32
+        self.lib.storage_add_at.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
+        self.lib.storage_add_at.restype = ctypes.c_uint32
+        self.lib.storage_get.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t]
+        self.lib.storage_get.restype = ctypes.c_uint32
+        for name in ("init", "join_room", "register_log_callback", "register_event_callback",
+                     "register_event_callback_v2", "update_position", "update_position_in_room",
+                     "send_message", "send_message_in_room", "set_config"):
+            getattr(self.lib, name).restype = None
 
         _active_instance = self
 
@@ -201,8 +230,7 @@ class MistNode:
 
         0 = ReliableOrdered, 1 = UnreliableOrdered, 2 = Unreliable,
         3 = ReliableUnordered (fully reliable without ordering guarantees).
-        Code 3 requires the upcoming mistlib release and falls back to the
-        reliable ordered channel when the peer lacks support.
+        Code 3 falls back to the reliable ordered channel when the peer lacks support.
         """
         to_id_bytes = to_id.encode('utf-8') if to_id else b""
         if room is not None:
@@ -235,9 +263,46 @@ class MistNode:
     def leave_all_rooms(self):
         """Leave all rooms and release this process's engine (mistlib >= 0.7.0)."""
         global _active_instance
-        self._leave_all_rooms()
+        self.lib.leave_all_rooms()
         if _active_instance is self:
             _active_instance = None
+
+    def get_version(self):
+        """Return the loaded native engine version."""
+        return _read_build_string(self.lib.get_version)
+
+    def get_build_info(self):
+        """Return the loaded native engine's build information as a JSON string."""
+        return _read_build_string(self.lib.get_build_info)
+
+    def storage_add(self, name, data):
+        return self._storage_add(name, data)
+
+    def storage_add_at(self, name, data, x, y, z):
+        return self._storage_add(name, data, (float(x), float(y), float(z)))
+
+    def _storage_add(self, name, data, position=None):
+        name_bytes = name.encode('utf-8')
+        buffer = (ctypes.c_uint8 * 256)()
+        args = (name_bytes, len(name_bytes), data, len(data))
+        if position is None:
+            written = self.lib.storage_add(*args, buffer, len(buffer))
+        else:
+            written = self.lib.storage_add_at(*args, *position, buffer, len(buffer))
+        if written == 0 or written > len(buffer):
+            raise RuntimeError("mistlib storage add failed")
+        return bytes(buffer[:written]).decode('utf-8')
+
+    def storage_get(self, cid):
+        cid_bytes = cid.encode('utf-8')
+        required = self.lib.storage_get(cid_bytes, len(cid_bytes), None, 0)
+        if required == 0:
+            return None
+        buffer = (ctypes.c_uint8 * required)()
+        written = self.lib.storage_get(cid_bytes, len(cid_bytes), buffer, len(buffer))
+        if written == 0 or written > len(buffer):
+            return None
+        return bytes(buffer[:written])
 
     def get_stats(self):
         buffer = (ctypes.c_uint8 * 65536)()

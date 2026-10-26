@@ -542,7 +542,7 @@
       }
   </script>
   <script type="module">
-    import { MistNode, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
+    import { MistNode, getVersion, MEDIA_EVENT_TRACK_ADDED, MEDIA_EVENT_TRACK_REMOVED } from '../../wrappers/web/index.js';
 
     const roomIdInput = document.getElementById('roomId');
     const signalingUrlInput = document.getElementById('signalingUrl');
@@ -1091,6 +1091,7 @@
             } },
           });
       await node.init();
+      log(`MistLib ${await getVersion()}`);
       node.joinRoom(roomId);
 
       node.onMediaEvent((eventType, payload) => {

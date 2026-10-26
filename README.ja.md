@@ -28,7 +28,15 @@ English: [README.md](README.md)
   [各リリース](https://github.com/tik-choco-lab/mistlib/releases/latest) の
   `mistlib-native-<platform>-<version>.zip`。
 
-下表のパスへ置くか、エンジンのソースを手元に持っているならスクリプトに任せられます。
+すべてのラッパーは **MistLib 0.7.0 以降**を必要とします。GitHub CLI (`gh`) と
+`unzip` を用意し、リリース成果物を取得してください。
+
+```sh
+just fetch 0.7.0        # または ./scripts/sync-mistlib.sh --release 0.7.0
+```
+
+WASM と Linux x86_64 / Windows x86_64 / macOS aarch64 のネイティブライブラリを
+下表のパスへ配置します。エンジンのソースからビルドする場合は次を使います。
 
 ```sh
 cp .env.example .env   # 取得元とブランチを設定
@@ -56,6 +64,7 @@ web のデモは各ページの import map 経由で CDN からエンジンを�
 
 | コマンド | 内容 |
 | --- | --- |
+| `just fetch 0.7.0` | リリース成果物を取得して配置 (Rust ビルド不要) |
 | `just sync` | エンジンをビルドして成果物を配置 |
 | `just sync-fast` | ビルドを省略してコピーのみ |
 | `just serve` | Web サンプル用の HTTP サーバーを起動 |
@@ -90,16 +99,28 @@ new MistNode(id, { signaling: { mode: "nostr", nostr: {
 | 2 | Unreliable | 欠落・順序入れ替わりの可能性あり（既定） |
 | 3 | ReliableUnordered | 完全な信頼性、順序保証なし |
 
-コード 3 には次の mistlib リリースが必要です。相手が未対応の場合、エンジンは
+コード 3 は mistlib 0.7.0 で利用できます。相手が未対応の場合、エンジンは
 信頼性と順序を保証するチャネルへフォールバックします。コード 0〜2 は変更ありません。
 
 Python と Web は `DELIVERY_RELIABLE` (0)、`DELIVERY_UNRELIABLE_ORDERED` (1)、
 `DELIVERY_UNRELIABLE` (2)、`DELIVERY_RELIABLE_UNORDERED` (3) を公開します。
 Unity は上表の方式名を `MistEngine.DeliveryMethod` で公開します。
 
-次のエンジンリリースは `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
+mistlib 0.7.0 は `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
 そのまま渡すため、既定値の指定は不要です。flat FFI JSON のキーは `storageTransfer`
 です（エンジンの完全な設定では `storage.transfer`）。
+
+## エンジンのバージョン
+
+Python は `mist` と `MistNode` の `get_version()` / `get_build_info()`、
+Web は非同期の `getVersion()` / `getBuildInfo()`、Unity は
+`MistEngine.I.GetVersion()` / `GetBuildInfo()` を公開します。ビルド情報は JSON 文字列です。
+ラッパーのパッケージバージョンとは別に、読み込まれたエンジンを確認できます。
+
+Web でバージョンの export が見つからない場合は `@tik-choco/mistlib` を 0.7.0 以降に
+更新してください。ローカルの import map を使う場合は `just fetch 0.7.0` または
+`just sync` を再実行してページを再読み込みしてください。古い `mistlib-wasm/pkg` には
+7 月の 0.1.0 ビルドが残っていることがあります。
 
 ## ライセンス
 
@@ -111,6 +132,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-全ルーム退出 API には mistlib 0.7.0 以降が必要です。Python は古いネイティブ
-ライブラリを読み込むと警告を出し、従来の関数にフォールバックします。
+すべてのラッパーには mistlib 0.7.0 以降が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

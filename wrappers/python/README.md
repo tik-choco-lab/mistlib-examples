@@ -14,10 +14,20 @@ Add this directory to `PYTHONPATH`, then import the package:
 ```python
 import sys
 sys.path.append("path/to/mistlib-examples/wrappers/python")
-from mist import MistNode
+from mist import MistNode, get_version, get_build_info
+
+print(get_version())                 # Loaded engine version, e.g. 0.7.0
+print(get_build_info())              # Build details as a JSON string
 ```
 
 See [examples/python](../../examples/python) for working code.
+
+Requires mistlib native **0.7.0 or later**. Run `just fetch 0.7.0` at the repository
+root to install it. Metadata uses the native size-query API and is also available
+as `node.get_version()` / `node.get_build_info()` before `node.init()`.
+
+Storage methods are `storage_add(name, data)`,
+`storage_add_at(name, data, x, y, z)` and `storage_get(cid)` (bytes or `None`).
 
 ## Delivery methods
 
@@ -30,9 +40,8 @@ See [examples/python](../../examples/python) for working code.
 | `DELIVERY_UNRELIABLE` | 2 | May drop or reorder messages (default) |
 | `DELIVERY_RELIABLE_UNORDERED` | 3 | Fully reliable, unordered |
 
-`DeliveryMethod` is the type alias for codes 0–3. Code 3 requires the upcoming
-mistlib release; unsupported peers use the reliable ordered channel. Codes 0–2
-are unchanged. For example:
+`DeliveryMethod` is the type alias for codes 0–3. Unsupported peers use the
+reliable ordered channel for code 3. For example:
 
 ```python
 from mist import DELIVERY_RELIABLE_UNORDERED
@@ -40,7 +49,7 @@ node.send_message("peer-id", b"hello", delivery=DELIVERY_RELIABLE_UNORDERED)
 ```
 
 Configuration dictionaries pass through to the engine, including `storageTransfer`.
-The upcoming engine supplies CP50 defaults when it is omitted.
+MistLib 0.7.0 supplies CP50 defaults when it is omitted.
 
 Run the wrapper tests with `python3 -m unittest discover -s wrappers/python/tests`
 from the repository root; no native binary is needed.
@@ -52,7 +61,7 @@ node.leave_room("my-room")  # Leave only this room
 node.leave_all_rooms()     # Leave every room and release the engine
 ```
 
-`leave_all_rooms` requires mistlib 0.7.0 or later. With older native libraries,
-Python warns and falls back to the legacy native `leave_room()` symbol.
+`leave_room(id)` uses native `leave_room_id`, the per-room symbol in 0.7.0.
+`leave_all_rooms()` uses native `leave_all_rooms`.
 The no-argument `node.leave_room()` and `node.leave_room_id(id)` aliases emit
 `DeprecationWarning`; use `leave_all_rooms()` and `leave_room(id)` respectively.

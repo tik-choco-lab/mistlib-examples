@@ -14,14 +14,16 @@ export const MEDIA_EVENT_TRACK_REMOVED: number;
 export const DELIVERY_RELIABLE: 0;
 export const DELIVERY_UNRELIABLE_ORDERED: 1;
 export const DELIVERY_UNRELIABLE: 2;
-/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers.
- * Requires the upcoming mistlib release.
- */
+/** Fully reliable, unordered; falls back to reliable ordered on unsupported peers. */
 export const DELIVERY_RELIABLE_UNORDERED: 3;
 export const DEFAULT_SIGNALING_URL: string;
 export const DEFAULT_NOSTR_RELAY_URL: string;
 export function defaultConfig(): Record<string, unknown>;
 export function getVersion(): Promise<string>;
+/** Returns the engine's build information as a JSON string. */
+export function getBuildInfo(): Promise<string>;
+/** Configure logging before the first node initialization. */
+export function setLogLevel(level: string): Promise<boolean>;
 
 export function storage_add(name: string, data: Uint8Array): Promise<string>;
 export function storage_get(rootCid: string): Promise<Uint8Array>;
@@ -74,6 +76,7 @@ export class MistNode {
     joinRoomAsync(roomId: string): Promise<void>;
     isRoomJoined(roomId: string): boolean;
     leaveRoom(roomId: string): void;
+    leaveRoomAsync(roomId: string): Promise<void>;
     /** @deprecated Use leaveAllRooms(). */
     leaveRoom(): void;
     /** @deprecated Use leaveRoom(roomId). */
@@ -90,8 +93,7 @@ export class MistNode {
 
     /**
      * Send using a delivery guarantee; defaults to Unreliable (2).
-     * ReliableUnordered (3) requires the upcoming engine release and falls back
-     * to reliable ordered when the peer lacks support.
+     * ReliableUnordered (3) falls back to reliable ordered when the peer lacks support.
      */
     sendMessage(
         toId: string | null | undefined,
@@ -114,6 +116,8 @@ export class MistNode {
         options?: LocalTrackOptions,
     ): MediaStreamTrack;
     getLocalTrack(trackId: string): MediaStreamTrack | null;
+    /** null/undefined = all peers; [] = nobody. */
+    setLocalTrackAudience(trackId: string, nodeIds?: string[] | null): void;
     publishLocalTrack(trackId: string): void;
     unpublishLocalTrack(trackId: string): void;
     removeLocalTrack(trackId: string): void;

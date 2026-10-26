@@ -104,7 +104,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { MistNode } from '../../wrappers/web/index.js';
+        import { MistNode, getVersion } from '../../wrappers/web/index.js';
 
         // --- Utils: SmoothDamp & Transform ---
         function smoothDamp(current, target, state, smoothTime, dt) {
@@ -226,6 +226,7 @@
             } },
         });
         await node.init();
+        console.info(`MistLib ${await getVersion()}`);
         node.joinRoom("metaverse-lobby");
         document.getElementById('ui-status').innerText = 'Connected';
 

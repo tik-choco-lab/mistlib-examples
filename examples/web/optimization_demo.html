@@ -198,7 +198,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { MistNode } from '../../wrappers/web/index.js';
+        import { MistNode, getVersion } from '../../wrappers/web/index.js';
 
         // Settings
         const ROOM_ID = "optimization-demo-room";
@@ -505,6 +505,7 @@
                 } },
             });
             await nodeObj.init();
+            console.info(`MistLib ${await getVersion()}`);
 
             // Override limits to make topology changes faster for demo purposes
             let config = nodeObj.getConfig();

@@ -18,6 +18,7 @@
     "send_message",
     "send_message_in_room",
     "leave_room",
+    "leave_room_async",
     "leave_all_rooms",
     "register_event_callback",
     "register_media_event_callback",
@@ -37,6 +38,8 @@
     "storage_kv_set",
     "storage_kv_get",
     "storage_kv_delete",
-    "get_version"
+    "get_version",
+    "get_build_info",
+    "set_log_level"
   ]
 }

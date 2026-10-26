@@ -59,8 +59,7 @@ Use `OnRoomEvent` for room ids; room lifecycle events have empty senders.
 
 ## Changelog
 
-- **0.3.0** (unreleased, breaking): Target engine 0.7.1 exactly; replace the
-  misleading callback enum members with the canonical table, correct `Neighbors`
-  to 4, and handle room lifecycle/connection-loss notifications on the main thread.
-
-- **0.2.0**: Require engine 0.7.0; expose `GetVersion()` and `GetBuildInfo()`.
+- **0.2.0** (breaking): Target engine 0.7.1 exactly; replace the misleading
+  callback enum members with the canonical table, correct `Neighbors` to 4, and
+  handle room lifecycle/connection-loss notifications on the main thread. Expose
+  `GetVersion()` and `GetBuildInfo()`.

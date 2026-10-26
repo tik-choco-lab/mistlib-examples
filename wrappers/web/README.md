@@ -7,7 +7,7 @@ and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.1). See the
 [root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.1 exactly.
 
 ```sh
-npm i @tik-choco/mistlib@0.7.1 @tik-choco/mistlib-web@0.4.0
+npm i @tik-choco/mistlib@0.7.1 @tik-choco/mistlib-web@0.3.0
 ```
 
 Use in a browser application:
@@ -102,9 +102,8 @@ Room joined/join failed/left now use 10/11/12; media remains 100/101 through
 
 ## Changelog
 
-- **0.4.0** (unreleased, breaking): Target engine 0.7.1 exactly; adopt unified
-  event codes, add position/connection-loss events and literal TypeScript values.
-  Peer/AOI callbacks now carry the engine's native-compatible fixed strings.
-
-- **0.3.0**: Require engine 0.7.0, add `getBuildInfo()`, stale-engine diagnostics,
-  track audience control, async room leave and log level configuration.
+- **0.3.0** (breaking): Target engine 0.7.1 exactly; adopt unified event codes,
+  add position/connection-loss events and literal TypeScript values. Peer/AOI
+  callbacks now carry the engine's native-compatible fixed strings. Add
+  `getBuildInfo()`, stale-engine diagnostics, track audience control, async room
+  leave and log level configuration.

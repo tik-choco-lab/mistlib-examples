@@ -1,14 +1,14 @@
 # Changelog
 
-## Unreleased wrapper updates — engine 0.7.1
+## 2026-10-26 — engine 0.7.1 (Web wrapper 0.3.0, Unity package 0.2.0)
 
 - Target engine 0.7.1 exactly across wrappers, demo import maps, scripts and API
   manifests. Engine 0.7.1 is published on GitHub Releases and npm; fetch local
   native and WASM artifacts with `just fetch 0.7.1`.
-- Web wrapper 0.4.0 (breaking): adopt the unified event codes 0–12, including
+- Web wrapper 0.3.0 (breaking): adopt the unified event codes 0–12, including
   node position updates (7), connection loss (9), and room lifecycle (10–12).
   TypeScript constants now have literal values. Media codes stay 100/101.
-- Unity package 0.3.0 (breaking): replace misleading `MistLibMessageType` members
+- Unity package 0.2.0 (breaking): replace misleading `MistLibMessageType` members
   with canonical callback names and values, including native room events. The
   sync manager handles `Raw` (0); room readiness/failure/leave and connection loss
   are logged when callbacks reach the main thread.

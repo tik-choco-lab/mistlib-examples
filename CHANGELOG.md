@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-04 — engine 0.7.3-beta.3
+
+- Target engine 0.7.3-beta.3 (npm `beta` dist-tag, GitHub prerelease) exactly
+  across wrappers, demo import maps, scripts and API manifests; fetch local
+  native and WASM artifacts with `just fetch 0.7.3-beta.3`. The exported API and
+  the event codes 0–12 / 100–101 are unchanged from 0.7.1; the engine changes
+  since then are internal (signaling load bounds, WebRTC recovery, storage
+  transfer robustness, wasm storage work off the main thread).
+- Version checks in `sync-mistlib.sh`, `check-engine-api.mjs` and the
+  update-engine workflow now accept semver prerelease versions.
+
 ## 2026-10-26 — engine 0.7.1 (Web wrapper 0.3.0, Unity package 0.2.0)
 
 - Target engine 0.7.1 exactly across wrappers, demo import maps, scripts and API

@@ -32,7 +32,7 @@ jobs:
         id: versions
         run: |
           set -euo pipefail
-          current=$(grep -ohE '@tik-choco/mistlib@[0-9]+\.[0-9]+\.[0-9]+' examples/web/*.html \
+          current=$(grep -ohE '@tik-choco/mistlib@[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?' examples/web/*.html \
             | head -1 | sed 's/.*@//')
           supported=$(node -p "require('./scripts/engine-api.json').engineVersion")
           echo "current=$current" >> "$GITHUB_OUTPUT"
@@ -41,7 +41,7 @@ jobs:
 
           # Every pin must agree, or the rewrite below would leave the repo in a
           # mixed state that is hard to notice.
-          mismatched=$(grep -ohE '@tik-choco/mistlib@[0-9]+\.[0-9]+\.[0-9]+' examples/web/*.html \
+          mismatched=$(grep -ohE '@tik-choco/mistlib@[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?' examples/web/*.html \
             | sort -u | wc -l)
           test "$mismatched" -eq 1 \
             || { echo "::error::the examples pin more than one engine version"; exit 1; }

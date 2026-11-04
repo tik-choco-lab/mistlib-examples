@@ -2,12 +2,12 @@
 
 Thin browser wrapper around the [mistlib engine](https://github.com/tik-choco-lab/mistlib).
 
-Engine 0.7.1 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1)
-and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.1). See the
-[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.1 exactly.
+Engine 0.7.3-beta.3 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3). See the
+[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.3 exactly.
 
 ```sh
-npm i @tik-choco/mistlib@0.7.1 @tik-choco/mistlib-web@0.3.0
+npm i @tik-choco/mistlib@0.7.3-beta.3 @tik-choco/mistlib-web@0.3.0
 ```
 
 Use in a browser application:
@@ -32,12 +32,12 @@ await node.joinRoomAsync('my-room');
 
 Choose invite values unique to your application and share them with its peers.
 The wrapper imports the engine by package name (`@tik-choco/mistlib`), so your
-bundler or browser import map must resolve it. The engine requires version 0.7.1.
+bundler or browser import map must resolve it. The engine requires version 0.7.3-beta.3.
 Wrapper versions are independent from engine versions.
 
 Both metadata functions initialize WASM without starting a node and return strings;
 `getBuildInfo()` returns JSON. If the loaded engine lacks these exports, update to
-`@tik-choco/mistlib 0.7.1`. For a local import map, rerun `just fetch 0.7.1` or
+`@tik-choco/mistlib 0.7.3-beta.3`. For a local import map, rerun `just fetch 0.7.3-beta.3` or
 `just sync` at the repository root, then reload the page.
 
 ## Delivery methods
@@ -59,7 +59,7 @@ import { DELIVERY_RELIABLE_UNORDERED } from '@tik-choco/mistlib-web';
 node.sendMessage('peer-id', 'hello', DELIVERY_RELIABLE_UNORDERED);
 ```
 
-Options pass through to the engine, including `storageTransfer`. MistLib 0.7.1
+Options pass through to the engine, including `storageTransfer`. MistLib 0.7.3-beta.3
 supplies CP50 defaults when it is omitted.
 
 Run `node --test wrappers/web/tests/*.test.mjs` from the repository root to test
@@ -73,7 +73,7 @@ node.leaveAllRooms();     // Leave every room and release the engine
 ```
 
 `leaveAllRooms()` calls the WASM `leave_all_rooms()` export and requires mistlib
-0.7.1. `leaveRoom(id)` calls WASM `leave_room(id)`.
+0.7.3-beta.3. `leaveRoom(id)` calls WASM `leave_room(id)`.
 The no-argument `leaveRoom()` and `leaveRoomId(id)` aliases are deprecated and
 warn; use `leaveAllRooms()` and `leaveRoom(id)` respectively.
 

@@ -28,13 +28,13 @@ they are published by [mistlib](https://github.com/tik-choco-lab/mistlib):
   [each release](https://github.com/tik-choco-lab/mistlib/releases/latest) as
   `mistlib-native-<platform>-<version>.zip`.
 
-All wrappers target **MistLib 0.7.1 exactly**. Native and WASM artifacts are available
-in the [v0.7.1 release](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.1),
-and the engine is published on npm as `@tik-choco/mistlib@0.7.1`.
-Download the 0.7.1 artifacts with GitHub CLI (`gh`) and `unzip` installed:
+All wrappers target **MistLib 0.7.3-beta.3 exactly**. Native and WASM artifacts are available
+in the [v0.7.3-beta.3 release](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3),
+and the engine is published on npm as `@tik-choco/mistlib@0.7.3-beta.3`.
+Download the 0.7.3-beta.3 artifacts with GitHub CLI (`gh`) and `unzip` installed:
 
 ```sh
-just fetch 0.7.1        # or ./scripts/sync-mistlib.sh --release 0.7.1
+just fetch 0.7.3-beta.3        # or ./scripts/sync-mistlib.sh --release 0.7.3-beta.3
 ```
 
 This installs WASM and the Linux x86_64, Windows x86_64 and macOS aarch64 native
@@ -65,7 +65,7 @@ We use [just](https://github.com/casey/just). Run `just` to list the recipes.
 
 | Command | Description |
 | --- | --- |
-| `just fetch 0.7.1` | Download and place the release artifacts (no Rust build needed) |
+| `just fetch 0.7.3-beta.3` | Download and place the release artifacts (no Rust build needed) |
 | `just sync` | Build the engine and place the artifacts |
 | `just sync-fast` | Skip the build and only copy existing artifacts |
 | `just serve` | Start an HTTP server for the web samples |
@@ -107,7 +107,7 @@ Python and Web export `DELIVERY_RELIABLE` (0), `DELIVERY_UNRELIABLE_ORDERED` (1)
 `DELIVERY_UNRELIABLE` (2), and `DELIVERY_RELIABLE_UNORDERED` (3). Unity exposes
 `MistEngine.DeliveryMethod` with the method names above.
 
-MistLib 0.7.1 also supplies the `storageTransfer` CP50 defaults; wrappers
+MistLib 0.7.3-beta.3 also supplies the `storageTransfer` CP50 defaults; wrappers
 pass configuration through without needing to set them. The flat FFI JSON key is
 `storageTransfer` (the full engine configuration uses `storage.transfer`).
 
@@ -118,8 +118,8 @@ Web exposes async `getVersion()` / `getBuildInfo()`; Unity exposes
 `MistEngine.I.GetVersion()` / `GetBuildInfo()`. Build information is a JSON string.
 These report the loaded engine, independently of the wrapper package version.
 
-If Web reports a missing version export, update `@tik-choco/mistlib` to 0.7.1.
-For a local import map, rerun `just fetch 0.7.1` or `just sync` and reload the page;
+If Web reports a missing version export, update `@tik-choco/mistlib` to 0.7.3-beta.3.
+For a local import map, rerun `just fetch 0.7.3-beta.3` or `just sync` and reload the page;
 older `mistlib-wasm/pkg` directories can still contain the July 0.1.0 build.
 
 ## Event codes
@@ -166,7 +166,7 @@ those methods provides no event-code migration benefit.
 
 Run `node scripts/check-engine-api.mjs --source` to validate event values, public
 exports, declarations and pins without downloading an engine. The artifact-backed
-`node scripts/check-engine-api.mjs 0.7.1` additionally checks published engine
+`node scripts/check-engine-api.mjs 0.7.3-beta.3` additionally checks published engine
 exports and enums; run it after release. Automation only uses the version in
 `scripts/engine-api.json`, never npm's latest tag.
 
@@ -182,4 +182,4 @@ Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
 `node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
 The first operation leaves one room; the second leaves all rooms.
-All wrappers require mistlib 0.7.1. No-argument room-leave calls are deprecated.
+All wrappers require mistlib 0.7.3-beta.3. No-argument room-leave calls are deprecated.

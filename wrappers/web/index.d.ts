@@ -83,7 +83,7 @@ export class MistNode {
     leaveRoom(): void;
     /** @deprecated Use leaveRoom(roomId). */
     leaveRoomId(roomId: string): void;
-    /** Requires mistlib 0.7.1. */
+    /** Requires mistlib 0.7.3-beta.3. */
     leaveAllRooms(): void;
     updatePosition(x: number, y: number, z?: number, roomId?: string): void;
 

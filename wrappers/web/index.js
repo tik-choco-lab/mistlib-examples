@@ -90,8 +90,8 @@ function ensureWasmInitialized() {
         const missing = ['get_version', 'get_build_info'].filter(name => typeof mistWasm[name] !== 'function');
         if (missing.length) {
             throw new Error(
-                `mistlib-wasm is missing ${missing.join(', ')}; update to @tik-choco/mistlib 0.7.1 ` +
-                'or rerun just fetch 0.7.1 / just sync to refresh mistlib-wasm/pkg.',
+                `mistlib-wasm is missing ${missing.join(', ')}; update to @tik-choco/mistlib 0.7.3-beta.3 ` +
+                'or rerun just fetch 0.7.3-beta.3 / just sync to refresh mistlib-wasm/pkg.',
             );
         }
         wasmInitPromise = init().catch((err) => {
@@ -401,7 +401,7 @@ export class MistNode {
         return mist_leave_room_async(roomId);
     }
 
-    /** Leave all rooms and release the engine. Requires mistlib 0.7.1. */
+    /** Leave all rooms and release the engine. Requires mistlib 0.7.3-beta.3. */
     leaveAllRooms() {
         mist_leave_all_rooms();
         if (activeNode === this) {

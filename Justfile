@@ -8,7 +8,7 @@ default:
 # --- エンジン成果物の取得 (設定は .env / .env.example を参照) ---
 
 # GitHub リリースから全プラットフォームの成果物を取得する (gh / unzip が必要)。
-fetch version="0.7.1":
+fetch version="0.7.3-beta.3":
     ./scripts/sync-mistlib.sh --release {{quote(version)}}
 
 # mistlib-dev からエンジンをビルドして成果物を配置する。

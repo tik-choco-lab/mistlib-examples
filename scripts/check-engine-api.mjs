@@ -67,7 +67,7 @@ assert.deepEqual(imported.sort(), [...required].sort(), "engine export manifest 
 assert.equal(JSON.parse(source("wrappers/web/package.json")).peerDependencies["@tik-choco/mistlib"], engineVersion);
 if (sourceOnly) {
     for (const page of ["index.html", "media.html", "optimization_demo.html"]) {
-        const pin = source(`examples/web/${page}`).match(/@tik-choco\/mistlib@(\d+\.\d+\.\d+)\//);
+        const pin = source(`examples/web/${page}`).match(/@tik-choco\/mistlib@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\//);
         assert.equal(pin?.[1], engineVersion, page);
     }
     console.log(`engine ${engineVersion}: wrapper events, declarations, exports and pins agree (offline)`);

@@ -28,13 +28,13 @@ English: [README.md](README.md)
   [各リリース](https://github.com/tik-choco-lab/mistlib/releases/latest) の
   `mistlib-native-<platform>-<version>.zip`。
 
-すべてのラッパーは **MistLib 0.7.3-beta.4 のみ**を対象にします。ネイティブと WASM の成果物は
-[v0.7.3-beta.4 リリース](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4) で公開予定で、
-エンジンは npm の `@tik-choco/mistlib@0.7.3-beta.4` として公開予定です。
+すべてのラッパーは **MistLib 0.7.3-beta.5 のみ**を対象にします。ネイティブと WASM の成果物は
+[v0.7.3-beta.5 リリース](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.5) で公開予定で、
+エンジンは npm の `@tik-choco/mistlib@0.7.3-beta.5` として公開予定です。
 GitHub CLI (`gh`) と `unzip` を用意して取得します。
 
 ```sh
-just fetch 0.7.3-beta.4        # または ./scripts/sync-mistlib.sh --release 0.7.3-beta.4
+just fetch 0.7.3-beta.5        # または ./scripts/sync-mistlib.sh --release 0.7.3-beta.5
 ```
 
 WASM と Linux x86_64 / Windows x86_64 / macOS aarch64 のネイティブライブラリを
@@ -66,7 +66,7 @@ web のデモは各ページの import map 経由で CDN からエンジンを�
 
 | コマンド | 内容 |
 | --- | --- |
-| `just fetch 0.7.3-beta.4` | リリース成果物を取得して配置 (Rust ビルド不要) |
+| `just fetch 0.7.3-beta.5` | リリース成果物を取得して配置 (Rust ビルド不要) |
 | `just sync` | エンジンをビルドして成果物を配置 |
 | `just sync-fast` | ビルドを省略してコピーのみ |
 | `just serve` | Web サンプル用の HTTP サーバーを起動 |
@@ -117,7 +117,8 @@ new MistNode(id, { signaling: { mode: "nostr_auto", nostr: {
 
 既定の `nostr_auto`（別名 `nostrAuto`）は、設定されたループバックリレーを先に試します。
 1 つでも接続できればリモートリレーへの接続やリレー一覧の取得は行わず、接続できなければ
-残りのリレーにフォールバックします。`nostr` はすべてのリレーに接続します。同じローカル
+残りのリレーにフォールバックします。取得したリレー一覧（既定の一覧は `ws://localhost:7447` を含む）
+のループバックリレーも、一覧のリモートリレーより先に試します。`nostr` はすべてのリレーに接続します。同じローカル
 リレーに接続できないピアはリモートリレーのみを使うピアと出会えず、混在した設定では探索が
 分断されます。`websocket` は変更ありません。
 
@@ -130,14 +131,14 @@ new MistNode(id, { signaling: { mode: "nostr_auto", nostr: {
 | 2 | Unreliable | 欠落・順序入れ替わりの可能性あり（既定） |
 | 3 | ReliableUnordered | 完全な信頼性、順序保証なし |
 
-コード 3 は mistlib 0.7.3-beta.4 で利用できます。相手が未対応の場合、エンジンは
+コード 3 は mistlib 0.7.3-beta.5 で利用できます。相手が未対応の場合、エンジンは
 信頼性と順序を保証するチャネルへフォールバックします。コード 0〜2 は変更ありません。
 
 Python と Web は `DELIVERY_RELIABLE` (0)、`DELIVERY_UNRELIABLE_ORDERED` (1)、
 `DELIVERY_UNRELIABLE` (2)、`DELIVERY_RELIABLE_UNORDERED` (3) を公開します。
 Unity は上表の方式名を `MistEngine.DeliveryMethod` で公開します。
 
-mistlib 0.7.3-beta.4 は `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
+mistlib 0.7.3-beta.5 は `storageTransfer` の CP50 既定値も提供します。ラッパーは設定を
 そのまま渡すため、既定値の指定は不要です。flat FFI JSON のキーは `storageTransfer`
 です（エンジンの完全な設定では `storage.transfer`）。
 
@@ -148,8 +149,8 @@ Web は非同期の `getVersion()` / `getBuildInfo()`、Unity は
 `MistEngine.I.GetVersion()` / `GetBuildInfo()` を公開します。ビルド情報は JSON 文字列です。
 ラッパーのパッケージバージョンとは別に、読み込まれたエンジンを確認できます。
 
-Web でバージョンの export が見つからない場合は `@tik-choco/mistlib` を 0.7.3-beta.4に
-更新してください。ローカルの import map を使う場合は `just fetch 0.7.3-beta.4` または
+Web でバージョンの export が見つからない場合は `@tik-choco/mistlib` を 0.7.3-beta.5に
+更新してください。ローカルの import map を使う場合は `just fetch 0.7.3-beta.5` または
 `just sync` を再実行してページを再読み込みしてください。古い `mistlib-wasm/pkg` には
 7 月の 0.1.0 ビルドが残っていることがあります。
 
@@ -191,7 +192,7 @@ Python の `EVENT_JOIN` / `EVENT_LEAVE` は `EVENT_PEER_CONNECTED` /
 ルーム退出メソッドの非推奨 alias は、この変更に不要な破壊を避けるため維持します。
 
 `node scripts/check-engine-api.mjs --source` でバイナリ取得なしの検証ができます。
-公開後に `node scripts/check-engine-api.mjs 0.7.3-beta.4` で配布エンジンの export と enum を検証します。
+公開後に `node scripts/check-engine-api.mjs 0.7.3-beta.5` で配布エンジンの export と enum を検証します。
 自動更新も `scripts/engine-api.json` の指定バージョンだけを使います。
 変更履歴は [CHANGELOG.md](CHANGELOG.md) を参照してください。
 
@@ -205,5 +206,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-すべてのラッパーには mistlib 0.7.3-beta.4 が必要です。
+すべてのラッパーには mistlib 0.7.3-beta.5 が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

@@ -2,8 +2,8 @@
 
 mistlib のダイナミックライブラリ (`.dll` / `.so` / `.dylib`) を Python から呼び出す ctypes ラッパーです。
 
-エンジン 0.7.3-beta.4 は [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4)
-と [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.4) で公開予定です。
+エンジン 0.7.3-beta.5 は [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.5)
+と [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.5) で公開予定です。
 セットアップと共通イベント表は [ルート README](../../README.ja.md) を参照してください。
 
 English: [README.md](README.md)
@@ -20,13 +20,13 @@ import sys
 sys.path.append("path/to/mistlib-examples/wrappers/python")
 from mist import MistNode, get_version, get_build_info
 
-print(get_version())                 # 読み込んだエンジンのバージョン (例: 0.7.3-beta.4)
+print(get_version())                 # 読み込んだエンジンのバージョン (例: 0.7.3-beta.5)
 print(get_build_info())              # ビルド情報の JSON 文字列
 ```
 
 動作例は [examples/python](../../examples/python) を参照してください。
 
-mistlib ネイティブ **0.7.3-beta.4**が必要です。リポジトリルートで `just fetch 0.7.3-beta.4` を
+mistlib ネイティブ **0.7.3-beta.5**が必要です。リポジトリルートで `just fetch 0.7.3-beta.5` を
 実行して配置してください。メタデータはネイティブのサイズ照会 API で取得し、
 `node.init()` の前に `node.get_version()` / `node.get_build_info()` からも呼び出せます。
 
@@ -44,7 +44,7 @@ mistlib ネイティブ **0.7.3-beta.4**が必要です。リポジトリルー�
 | `DELIVERY_UNRELIABLE` | 2 | 欠落・順序入れ替わりの可能性あり（既定） |
 | `DELIVERY_RELIABLE_UNORDERED` | 3 | 完全な信頼性、順序保証なし |
 
-`DeliveryMethod` はコード 0〜3 の型エイリアスです。コード 3 は mistlib 0.7.3-beta.4 で利用できます。
+`DeliveryMethod` はコード 0〜3 の型エイリアスです。コード 3 は mistlib 0.7.3-beta.5 で利用できます。
 相手が未対応の場合は信頼性と順序を保証するチャネルへフォールバックします。
 
 ```python
@@ -53,7 +53,7 @@ node.send_message("peer-id", b"hello", delivery=DELIVERY_RELIABLE_UNORDERED)
 ```
 
 設定辞書は `storageTransfer` を含めそのままエンジンへ渡されます。
-省略時には mistlib 0.7.3-beta.4 の CP50 既定値が適用されます。
+省略時には mistlib 0.7.3-beta.5 の CP50 既定値が適用されます。
 
 リポジトリルートで `python3 -m unittest discover -s wrappers/python/tests` を実行すると
 ネイティブバイナリなしでラッパーのテストを実行できます。
@@ -65,7 +65,7 @@ node.leave_room("my-room")  # 指定ルームのみ退出
 node.leave_all_rooms()     # 全ルームを退出してエンジンを解放
 ```
 
-`leave_room(id)` は 0.7.3-beta.4 のルーム単位の関数 `leave_room_id` を呼び出します。
+`leave_room(id)` は 0.7.3-beta.5 のルーム単位の関数 `leave_room_id` を呼び出します。
 `leave_all_rooms()` はネイティブの `leave_all_rooms` を呼び出します。
 引数なしの `node.leave_room()` と `node.leave_room_id(id)` は非推奨で、
 `DeprecationWarning` を出します。それぞれ `leave_all_rooms()` と `leave_room(id)` に移行してください。

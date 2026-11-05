@@ -39,7 +39,7 @@ export function storage_add_pinned(name: string, data: Uint8Array): Promise<stri
  * without copying: the buffer (and every view of it) is detached before this returns.
  * Only the view's bytes are stored. Rejects if the buffer is shared, already detached
  * or not transferable; never falls back to a copy. Ownership is consumed even if the
- * asynchronous write later fails. Requires mistlib 0.7.3-beta.4.
+ * asynchronous write later fails. Requires mistlib 0.7.3-beta.5.
  */
 export function storage_add_owned(name: string, data: Uint8Array): Promise<string>;
 /** Ownership-taking variant of `storage_add_pinned`; see `storage_add_owned`. */
@@ -93,7 +93,7 @@ export class MistNode {
     leaveRoom(): void;
     /** @deprecated Use leaveRoom(roomId). */
     leaveRoomId(roomId: string): void;
-    /** Requires mistlib 0.7.3-beta.4. */
+    /** Requires mistlib 0.7.3-beta.5. */
     leaveAllRooms(): void;
     updatePosition(x: number, y: number, z?: number, roomId?: string): void;
 

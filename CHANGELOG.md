@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-05 — engine 0.7.3-beta.5
+
+- Pin wrappers, demos, scripts and documentation to engine 0.7.3-beta.5;
+  exported APIs and event codes remain unchanged.
+- Engine fix: `nostr_auto` now also prefers a loopback relay found in the
+  fetched relay list (the default list includes `ws://localhost:7447`); when it
+  opens, the listed remote relays are not contacted.
+
 ## 2026-11-05 — engine 0.7.3-beta.4 (Web wrapper 0.3.1-beta.3)
 
 - Pin wrappers, demos, scripts and documentation to engine 0.7.3-beta.4;

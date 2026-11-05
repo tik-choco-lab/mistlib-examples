@@ -266,7 +266,7 @@ class MistNode:
         return self.leave_room(room_id)
 
     def leave_all_rooms(self):
-        """Leave all rooms and release this process's engine (mistlib 0.7.3-beta.4)."""
+        """Leave all rooms and release this process's engine (mistlib 0.7.3-beta.5)."""
         global _active_instance
         self.lib.leave_all_rooms()
         if _active_instance is self:

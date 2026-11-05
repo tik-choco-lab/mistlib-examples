@@ -27,8 +27,8 @@ before(async () => {
         ${required.filter(name => name !== 'default').map(name =>
             `export function ${name}(...args) {
                 calls.push(['${name}', ...args]);
-                if ('${name}' === 'get_version') return '0.7.3-beta.4';
-                if ('${name}' === 'get_build_info') return '{"version":"0.7.3-beta.4","target":"wasm32-unknown-unknown"}';
+                if ('${name}' === 'get_version') return '0.7.3-beta.5';
+                if ('${name}' === 'get_build_info') return '{"version":"0.7.3-beta.5","target":"wasm32-unknown-unknown"}';
                 if ('${name}' === 'init_with_config' || '${name}' === 'set_log_level') return true;
                 if ('${name}' === 'leave_room_async') return Promise.resolve();
             }`
@@ -47,7 +47,7 @@ test('public codes preserve 0–2 and add ReliableUnordered = 3', () => {
     ], [0, 1, 2, 3]);
 });
 
-test('public event codes match the unified 0.7.3-beta.4 table', () => {
+test('public event codes match the unified 0.7.3-beta.5 table', () => {
     assert.deepEqual(Object.fromEntries(Object.entries(wrapper).filter(
         ([name]) => /^(MEDIA_)?EVENT_/.test(name))), {
         EVENT_RAW: 0,
@@ -127,9 +127,9 @@ test('leaveAllRooms releases the engine for another node', async () => {
 
 test('metadata reads the loaded engine without claiming a node', async () => {
     calls.length = 0;
-    assert.equal(await wrapper.getVersion(), '0.7.3-beta.4');
+    assert.equal(await wrapper.getVersion(), '0.7.3-beta.5');
     assert.deepEqual(JSON.parse(await wrapper.getBuildInfo()), {
-        version: '0.7.3-beta.4', target: 'wasm32-unknown-unknown',
+        version: '0.7.3-beta.5', target: 'wasm32-unknown-unknown',
     });
     assert.deepEqual(calls, [['get_version'], ['get_build_info']]);
     const other = new wrapper.MistNode('metadata', 'ws://localhost');
@@ -152,12 +152,12 @@ test('missing metadata exports explain how to refresh a stale engine', async () 
         for (const read of [old.getVersion, old.getBuildInfo]) {
             await assert.rejects(read(), error => {
                 assert.match(error.message, new RegExp(missing));
-                assert.match(error.message, /@tik-choco\/mistlib 0\.7\.3-beta\.4/);
-                assert.match(error.message, /just fetch 0\.7\.3-beta\.4 \/ just sync/);
+                assert.match(error.message, /@tik-choco\/mistlib 0\.7\.3-beta\.5/);
+                assert.match(error.message, /just fetch 0\.7\.3-beta\.5 \/ just sync/);
                 return true;
             });
         }
-        await assert.rejects(new old.MistNode('stale', 'ws://localhost').init(), /0\.7\.3-beta\.4/);
+        await assert.rejects(new old.MistNode('stale', 'ws://localhost').init(), /0\.7\.3-beta\.5/);
     }
 });
 

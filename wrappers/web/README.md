@@ -102,6 +102,7 @@ Room joined/join failed/left now use 10/11/12; media remains 100/101 through
 
 ## Changelog
 
+- For releases after 0.3.0, see the repository [CHANGELOG.md](https://github.com/tik-choco-lab/mistlib-examples/blob/main/CHANGELOG.md).
 - **0.3.0** (breaking): Target engine 0.7.1 exactly; adopt unified event codes,
   add position/connection-loss events and literal TypeScript values. Peer/AOI
   callbacks now carry the engine's native-compatible fixed strings. Add

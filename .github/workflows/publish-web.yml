@@ -1,4 +1,4 @@
-# Wrapper changes must bump wrappers/web/package.json version to be published.
+# Use `just publish beta|stable [--push]` to bump and release the Web wrapper.
 # The first version was published manually because npm trusted publishing can
 # only be configured on an existing package.
 #
@@ -47,4 +47,13 @@ jobs:
             echo "already published"
             exit 0
           fi
-          npm stage publish
+          tag=$(node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { distTag, assertStableEngine } from '../../scripts/publish-web.mjs';
+          const { version, peerDependencies } = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const tag = distTag(version);
+          if (tag === 'latest') assertStableEngine(peerDependencies?.['@tik-choco/mistlib']);
+          console.log(tag);
+          NODE
+          )
+          npm stage publish --tag "$tag"

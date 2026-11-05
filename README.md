@@ -73,8 +73,32 @@ We use [just](https://github.com/casey/just). Run `just` to list the recipes.
 | `just gui` / `just cli` / `just bot` | Run the Python samples |
 | `just log-server` | Start the gRPC log collection server |
 | `just proto` | Regenerate the Python stubs from `log.proto` |
-| `just check` | Syntax-check the Python and JavaScript sources |
+| `just check` | Check Python / JavaScript syntax, engine API consistency and release-script tests |
+| `just publish status\|beta\|stable [--push]` | Inspect or prepare a Web wrapper release |
 | `just clean` | Remove the fetched artifacts |
+
+### Releasing the Web wrapper
+
+Run `just publish status` to inspect versions, npm dist-tags and release guards.
+On a clean `develop`, `just publish beta` starts the next minor beta or increments
+the current beta; `just publish beta patch` / `major` chooses a different initial
+bump. `just publish stable` finishes a beta cycle. Add `--unity` to version the
+Unity package from its own current version using the same channel and bump.
+Use `--dry-run` to run every guard and test and print the plan without changes.
+
+Releases require a clean tree and index, `develop` up to date with the existing
+`origin/develop` ref, matching engine pins, an unpublished npm version, and passing
+`just check`, Web and Python tests. Fetch remote refs yourself before releasing;
+the command never fetches. A stable wrapper also requires a stable engine pin.
+
+The command updates package versions, the install example and the repository
+changelog, then commits. `--push` pushes `develop`, then fast-forwards `main` only
+when possible; otherwise it stops with merge instructions. Without `--push`, it
+prints the push commands. The **Publish web wrapper** Actions workflow submits
+the release through npm OIDC trusted publishing; a maintainer must approve the
+staged version with 2FA on npmjs.com (Staged Packages) or `npm stage approve`.
+Beta releases use the `beta` dist-tag; stable releases use `latest`.
+After approval, install a beta with `npm i @tik-choco/mistlib-web@beta`.
 
 ## Signaling
 

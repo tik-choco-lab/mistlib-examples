@@ -74,8 +74,31 @@ web のデモは各ページの import map 経由で CDN からエンジンを�
 | `just gui` / `just cli` / `just bot` | Python サンプルを起動 |
 | `just log-server` | gRPC ログ収集サーバーを起動 |
 | `just proto` | `log.proto` から Python スタブを再生成 |
-| `just check` | Python / JavaScript の構文チェック |
+| `just check` | Python / JavaScript の構文、エンジン API の整合性、リリーススクリプトのテスト |
+| `just publish status\|beta\|stable [--push]` | Web ラッパーのリリース状況の確認・準備 |
 | `just clean` | 取得した成果物を削除 |
+
+### Web ラッパーのリリース
+
+`just publish status` でバージョン、npm dist-tags、リリースガードを確認できます。
+クリーンな `develop` で `just publish beta` を実行すると、次の minor の beta を
+開始するか、既存の beta 番号を増やします。開始時の bump は `just publish beta patch` /
+`major` でも指定できます。`just publish stable` は beta サイクルを完了します。
+`--unity` を付けると、Unity パッケージも自身の現在のバージョンから同じチャネル・bump で
+更新します。`--dry-run` は全ガードとテストを実行して計画を表示し、変更しません。
+
+作業ツリーと index がクリーンで、`develop` が既存の `origin/develop` より遅れていないこと、
+エンジン pin の一致、対象バージョンが npm に未公開であること、`just check`・Web・Python の
+テスト成功を確認します。自動 fetch は行わないため、必要な場合は事前に fetch してください。
+stable の公開には stable エンジンの pin が必要です。
+
+コマンドはパッケージバージョン、インストール例、リポジトリの変更履歴を更新してコミットします。
+`--push` で `develop`、続いて fast-forward 可能な場合のみ `main` に push します。
+不可能な場合はマージ手順を表示して停止します。`--push` なしでは push コマンドを表示します。
+**Publish web wrapper** Actions が npm OIDC trusted publishing でステージングし、
+メンテナーが npmjs.com の Staged Packages または `npm stage approve` で 2FA 承認すると公開されます。
+beta は `beta`、stable は `latest` dist-tag を使います。
+承認後の beta は `npm i @tik-choco/mistlib-web@beta` でインストールできます。
 
 ## シグナリング
 

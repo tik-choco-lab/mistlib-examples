@@ -65,9 +65,14 @@ proto:
 
 # --- チェック ---
 
-# Python と JavaScript の構文チェック。
+# Python と JavaScript の構文・API チェックとリリーススクリプトのテスト。
 check:
     {{py}} -m compileall -q examples/python wrappers/python
     for f in wrappers/web/*.js; do node --check "$f"; done
     node scripts/check-engine-api.mjs --source
+    node --test scripts/publish-web.test.mjs
     @echo "OK"
+
+# Web ラッパーの beta / stable リリース (npm 公開は CI + 2FA 承認)。例: just publish beta --push
+publish *args:
+    node scripts/publish-web.mjs {{args}}

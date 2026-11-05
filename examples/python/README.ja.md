@@ -2,8 +2,8 @@
 
 mistlib を Python から使うサンプルです。
 
-エンジン 0.7.3-beta.3 は [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3)
-と [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3) で公開されています。
+エンジン 0.7.3-beta.4 は [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4)
+と [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.4) で公開予定です。
 セットアップと共通イベント表は [ルート README](../../README.ja.md) を参照してください。
 
 English: [README.md](README.md)
@@ -18,7 +18,7 @@ English: [README.md](README.md)
 
 ```sh
 just deps
-just fetch 0.7.3-beta.3
+just fetch 0.7.3-beta.4
 ```
 
 リポジトリのルートから実行します。
@@ -29,7 +29,7 @@ python examples/python/gui_client.py --id my-node --room demo-room
 
 `just` からも起動できます: `just gui`, `just cli`, `just bot` (headless)。
 
-サンプルは起動時に読み込んだエンジンのバージョンを表示します。MistLib 0.7.3-beta.3 が必要です。
+サンプルは起動時に読み込んだエンジンのバージョンを表示します。MistLib 0.7.3-beta.4 が必要です。
 
 ## オプション
 
@@ -51,5 +51,5 @@ Python は `node.leave_room(id)` / `node.leave_all_rooms()`、Web は
 `node.leaveRoom(id)` / `node.leaveAllRooms()`、Unity は
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` を使います。
 前者は指定ルームのみ、後者は全ルームを退出します。
-すべてのラッパーには mistlib 0.7.3-beta.3 が必要です。
+すべてのラッパーには mistlib 0.7.3-beta.4 が必要です。
 引数なしのルーム退出呼び出しは非推奨です。

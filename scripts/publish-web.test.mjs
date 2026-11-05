@@ -59,7 +59,7 @@ test('npm dist-tags separate beta releases from latest', () => {
 });
 
 test('stable engine guard rejects all prereleases and non-exact pins', () => {
-    for (const engine of ['0.7.3-beta.3', '1.0.0-rc.1', '1.0.0-0', '1.0.0-alpha+build']) {
+    for (const engine of ['0.7.3-beta.4', '1.0.0-rc.1', '1.0.0-0', '1.0.0-alpha+build']) {
         assert.equal(enginePrerelease(engine), true);
         assert.throws(() => assertStableEngine(engine), /先に stable エンジンを対象/);
     }
@@ -73,11 +73,11 @@ test('stable engine guard rejects all prereleases and non-exact pins', () => {
 });
 
 test('CHANGELOG appends versions to the existing top heading only', () => {
-    const source = '# Changelog\n\n## 2026-11-04 — engine 0.7.3-beta.3\n\n- Existing notes.\n\n## 2026-10-26 — older\n';
+    const source = '# Changelog\n\n## 2026-11-04 — engine 0.7.3-beta.4\n\n- Existing notes.\n\n## 2026-10-26 — older\n';
     assert.equal(rewriteChangelog(source, '0.4.0-beta.1', undefined, ['ignored']),
-        source.replace('engine 0.7.3-beta.3', 'engine 0.7.3-beta.3 (Web wrapper 0.4.0-beta.1)'));
+        source.replace('engine 0.7.3-beta.4', 'engine 0.7.3-beta.4 (Web wrapper 0.4.0-beta.1)'));
     assert.equal(rewriteChangelog(source, '0.4.0-beta.1', '0.3.0-beta.1'),
-        source.replace('engine 0.7.3-beta.3', 'engine 0.7.3-beta.3 (Web wrapper 0.4.0-beta.1, Unity package 0.3.0-beta.1)'));
+        source.replace('engine 0.7.3-beta.4', 'engine 0.7.3-beta.4 (Web wrapper 0.4.0-beta.1, Unity package 0.3.0-beta.1)'));
 });
 
 test('CHANGELOG inserts a new dated section and non-release subjects', () => {
@@ -105,18 +105,18 @@ test('CHANGELOG preserves CRLF line endings', () => {
 });
 
 test('README rewrites only the exact install line and pins beta versions', () => {
-    const source = '# Wrapper\n\n```sh\nnpm i @tik-choco/mistlib@0.7.3-beta.3 @tik-choco/mistlib-web@0.3.0\n```\n\nOther 0.3.0 notes.\n';
+    const source = '# Wrapper\n\n```sh\nnpm i @tik-choco/mistlib@0.7.3-beta.4 @tik-choco/mistlib-web@0.3.0\n```\n\nOther 0.3.0 notes.\n';
     for (const target of ['0.4.0-beta.1', '0.4.0']) {
-        assert.equal(rewriteReadme(source, '0.7.3-beta.3', '0.3.0', target),
+        assert.equal(rewriteReadme(source, '0.7.3-beta.4', '0.3.0', target),
             source.replace('mistlib-web@0.3.0', `mistlib-web@${target}`));
     }
     const crlf = source.replaceAll('\n', '\r\n');
-    assert.equal(rewriteReadme(crlf, '0.7.3-beta.3', '0.3.0', '0.4.0-beta.1'), crlf.replace('mistlib-web@0.3.0', 'mistlib-web@0.4.0-beta.1'));
+    assert.equal(rewriteReadme(crlf, '0.7.3-beta.4', '0.3.0', '0.4.0-beta.1'), crlf.replace('mistlib-web@0.3.0', 'mistlib-web@0.4.0-beta.1'));
     for (const bad of [
         '', source.replace('npm i ', 'npm install '),
         source.replace('mistlib-web@0.3.0', 'mistlib-web@^0.3.0'),
-        source.replace('mistlib@0.7.3-beta.3', 'mistlib@0.7.1'),
-    ]) assert.throws(() => rewriteReadme(bad, '0.7.3-beta.3', '0.3.0', '0.4.0-beta.1'), /npm i 行/);
+        source.replace('mistlib@0.7.3-beta.4', 'mistlib@0.7.1'),
+    ]) assert.throws(() => rewriteReadme(bad, '0.7.3-beta.4', '0.3.0', '0.4.0-beta.1'), /npm i 行/);
 });
 
 test('package version edits preserve key order, formatting and trailing newline state', () => {
@@ -127,17 +127,17 @@ test('package version edits preserve key order, formatting and trailing newline 
 });
 
 test('plans compute Unity independently and use exact release commit messages', () => {
-    const input = { webVersion: '0.3.0', unityVersion: '0.2.0', engineVersion: '0.7.3-beta.3', channel: 'beta' };
+    const input = { webVersion: '0.3.0', unityVersion: '0.2.0', engineVersion: '0.7.3-beta.4', channel: 'beta' };
     const web = createReleasePlan(input);
     assert.equal(web.web, '0.4.0-beta.1');
     assert.equal(web.unity, undefined);
     assert.equal(web.tag, 'beta');
-    assert.equal(web.commitMessage, 'chore(release): web wrapper 0.4.0-beta.1 for mistlib 0.7.3-beta.3');
+    assert.equal(web.commitMessage, 'chore(release): web wrapper 0.4.0-beta.1 for mistlib 0.7.3-beta.4');
     assert.deepEqual(web.files, ['wrappers/web/package.json', 'wrappers/web/README.md', 'CHANGELOG.md']);
     const both = createReleasePlan({ ...input, unity: true, bump: 'patch' });
     assert.equal(both.web, '0.3.1-beta.1');
     assert.equal(both.unity, '0.2.1-beta.1');
-    assert.equal(both.commitMessage, 'chore(release): web wrapper 0.3.1-beta.1 and Unity package 0.2.1-beta.1 for mistlib 0.7.3-beta.3');
+    assert.equal(both.commitMessage, 'chore(release): web wrapper 0.3.1-beta.1 and Unity package 0.2.1-beta.1 for mistlib 0.7.3-beta.4');
     assert.ok(both.files.includes('wrappers/unity/MistLib/package.json'));
     const stable = createReleasePlan({ ...input, webVersion: '0.4.0-beta.2', unityVersion: '0.3.0-beta.1', engineVersion: '0.7.3', channel: 'stable', unity: true });
     assert.equal(stable.web, '0.4.0');

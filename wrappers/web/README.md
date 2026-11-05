@@ -2,12 +2,12 @@
 
 Thin browser wrapper around the [mistlib engine](https://github.com/tik-choco-lab/mistlib).
 
-Engine 0.7.3-beta.3 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3)
-and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3). See the
-[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.3 exactly.
+Engine 0.7.3-beta.4 will be available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.4). See the
+[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.4 exactly.
 
 ```sh
-npm i @tik-choco/mistlib@0.7.3-beta.3 @tik-choco/mistlib-web@0.3.1-beta.2
+npm i @tik-choco/mistlib@0.7.3-beta.4 @tik-choco/mistlib-web@0.3.1-beta.2
 ```
 
 Use in a browser application:
@@ -19,7 +19,7 @@ console.log(await getVersion()); // Loaded engine version
 console.log(JSON.parse(await getBuildInfo())); // Loaded engine build details
 const node = new MistNode(crypto.randomUUID(), {
     signaling: {
-        mode: 'nostr',
+        mode: 'nostr_auto',
         nostr: {
             inviteSalt: 'my-app',
             inviteCode: 'replace-with-your-shared-secret',
@@ -31,13 +31,18 @@ await node.joinRoomAsync('my-room');
 ```
 
 Choose invite values unique to your application and share them with its peers.
+The default `nostr_auto` (alias `nostrAuto`) tries configured loopback relays first;
+if one opens, it skips remote relays and the relay list fetch, otherwise it falls back
+to the remaining relays. `nostr` connects to all relays. Peers that cannot reach the
+same local relay will not discover peers using only remote relays, so mixed configurations
+can partition discovery. The Web default relay list is empty.
 The wrapper imports the engine by package name (`@tik-choco/mistlib`), so your
-bundler or browser import map must resolve it. The engine requires version 0.7.3-beta.3.
+bundler or browser import map must resolve it. The engine requires version 0.7.3-beta.4.
 Wrapper versions are independent from engine versions.
 
 Both metadata functions initialize WASM without starting a node and return strings;
 `getBuildInfo()` returns JSON. If the loaded engine lacks these exports, update to
-`@tik-choco/mistlib 0.7.3-beta.3`. For a local import map, rerun `just fetch 0.7.3-beta.3` or
+`@tik-choco/mistlib 0.7.3-beta.4`. For a local import map, rerun `just fetch 0.7.3-beta.4` or
 `just sync` at the repository root, then reload the page.
 
 ## Delivery methods
@@ -59,7 +64,7 @@ import { DELIVERY_RELIABLE_UNORDERED } from '@tik-choco/mistlib-web';
 node.sendMessage('peer-id', 'hello', DELIVERY_RELIABLE_UNORDERED);
 ```
 
-Options pass through to the engine, including `storageTransfer`. MistLib 0.7.3-beta.3
+Options pass through to the engine, including `storageTransfer`. MistLib 0.7.3-beta.4
 supplies CP50 defaults when it is omitted.
 
 Run `node --test wrappers/web/tests/*.test.mjs` from the repository root to test
@@ -73,7 +78,7 @@ node.leaveAllRooms();     // Leave every room and release the engine
 ```
 
 `leaveAllRooms()` calls the WASM `leave_all_rooms()` export and requires mistlib
-0.7.3-beta.3. `leaveRoom(id)` calls WASM `leave_room(id)`.
+0.7.3-beta.4. `leaveRoom(id)` calls WASM `leave_room(id)`.
 The no-argument `leaveRoom()` and `leaveRoomId(id)` aliases are deprecated and
 warn; use `leaveAllRooms()` and `leaveRoom(id)` respectively.
 
@@ -90,7 +95,7 @@ Storage exports follow the engine's async API: `storage_add`, `storage_get`,
 `storage_add_pinned`, `storage_kv_set`, `storage_kv_get`, and `storage_kv_delete`.
 Pinning keeps roots out of eviction; KV data is local to the browser origin.
 
-`storage_add_owned` / `storage_add_pinned_owned` (mistlib 0.7.3-beta.3) avoid
+`storage_add_owned` / `storage_add_pinned_owned` (mistlib 0.7.3-beta.4) avoid
 copying large payloads: they transfer the `Uint8Array`'s entire backing
 `ArrayBuffer`, detaching it and every other view of it before returning, and
 reject shared, detached or non-transferable buffers instead of copying. Pass a

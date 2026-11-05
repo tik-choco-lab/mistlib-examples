@@ -2,9 +2,9 @@
 
 A ctypes wrapper that calls the mistlib dynamic library (`.dll` / `.so` / `.dylib`) from Python.
 
-Engine 0.7.3-beta.3 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3)
-and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3). See the
-[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.3 exactly.
+Engine 0.7.3-beta.4 will be available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.4). See the
+[root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.4 exactly.
 
 日本語版: [README.ja.md](README.ja.md)
 
@@ -20,13 +20,13 @@ import sys
 sys.path.append("path/to/mistlib-examples/wrappers/python")
 from mist import MistNode, get_version, get_build_info
 
-print(get_version())                 # Loaded engine version, e.g. 0.7.3-beta.3
+print(get_version())                 # Loaded engine version, e.g. 0.7.3-beta.4
 print(get_build_info())              # Build details as a JSON string
 ```
 
 See [examples/python](../../examples/python) for working code.
 
-Requires mistlib native **0.7.3-beta.3**. Run `just fetch 0.7.3-beta.3` at the repository
+Requires mistlib native **0.7.3-beta.4**. Run `just fetch 0.7.3-beta.4` at the repository
 root to install it. Metadata uses the native size-query API and is also available
 as `node.get_version()` / `node.get_build_info()` before `node.init()`.
 
@@ -53,7 +53,7 @@ node.send_message("peer-id", b"hello", delivery=DELIVERY_RELIABLE_UNORDERED)
 ```
 
 Configuration dictionaries pass through to the engine, including `storageTransfer`.
-MistLib 0.7.3-beta.3 supplies CP50 defaults when it is omitted.
+MistLib 0.7.3-beta.4 supplies CP50 defaults when it is omitted.
 
 Run the wrapper tests with `python3 -m unittest discover -s wrappers/python/tests`
 from the repository root; no native binary is needed.
@@ -65,7 +65,7 @@ node.leave_room("my-room")  # Leave only this room
 node.leave_all_rooms()     # Leave every room and release the engine
 ```
 
-`leave_room(id)` uses native `leave_room_id`, the per-room symbol in 0.7.3-beta.3.
+`leave_room(id)` uses native `leave_room_id`, the per-room symbol in 0.7.3-beta.4.
 `leave_all_rooms()` uses native `leave_all_rooms`.
 The no-argument `node.leave_room()` and `node.leave_room_id(id)` aliases emit
 `DeprecationWarning`; use `leave_all_rooms()` and `leave_room(id)` respectively.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-05 — engine 0.7.3-beta.4
+
+- Pin wrappers, demos, scripts and documentation to engine 0.7.3-beta.4;
+  exported APIs and event codes remain unchanged.
+- Default to `nostr_auto`, which prefers configured local relays before falling
+  back to remote relays. Web and Python invite guards cover `nostr_auto` and
+  `nostrAuto`; the Web defaults merge covers both as well as `nostr`.
+- Switch the Web demos to `nostr_auto`; Python demos use the updated default.
+
 ## 2026-11-05 — Web wrapper 0.3.1-beta.2
 
 - feat(web): expose storage_add_owned / storage_add_pinned_owned (zero-copy, mistlib 0.7.3-beta.3)

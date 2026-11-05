@@ -83,7 +83,7 @@ def get_build_info():
 def default_config():
     return {
         "signaling": {
-            "mode": "nostr",
+            "mode": "nostr_auto",
             "nostr": {
                 "relays": [DEFAULT_NOSTR_RELAY_URL],
                 "discoveryKind": 25049,
@@ -96,8 +96,10 @@ def default_config():
 
 
 def _assert_invite_configured(config):
+    if config is None:
+        return
     signaling = (config or {}).get("signaling") or {}
-    if signaling.get("mode") != "nostr":
+    if signaling.get("mode", "nostr_auto") not in ("nostr", "nostr_auto", "nostrAuto"):
         return
     nostr = signaling.get("nostr") or {}
     missing = [k for k in ("inviteSalt", "inviteCode") if not nostr.get(k)]
@@ -108,7 +110,7 @@ def _assert_invite_configured(config):
         "Together they derive the secret that decides who can reach your rooms, "
         "so peers sharing them share a namespace. Pick values unique to your "
         "application, e.g. "
-        'MistNode(node_id, config={"signaling": {"mode": "nostr", "nostr": '
+        'MistNode(node_id, config={"signaling": {"mode": "nostr_auto", "nostr": '
         '{"inviteSalt": "my-app", "inviteCode": "a-shared-secret"}}})'
     )
 
@@ -264,7 +266,7 @@ class MistNode:
         return self.leave_room(room_id)
 
     def leave_all_rooms(self):
-        """Leave all rooms and release this process's engine (mistlib 0.7.3-beta.3)."""
+        """Leave all rooms and release this process's engine (mistlib 0.7.3-beta.4)."""
         global _active_instance
         self.lib.leave_all_rooms()
         if _active_instance is self:

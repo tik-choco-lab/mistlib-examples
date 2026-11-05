@@ -2,9 +2,9 @@
 
 Samples using mistlib from Python.
 
-Engine 0.7.3-beta.3 is available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.3)
-and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3). See the
-[root README](../../README.md) for setup and the unified event table. These clients target engine 0.7.3-beta.3 exactly.
+Engine 0.7.3-beta.4 will be available on [GitHub Releases](https://github.com/tik-choco-lab/mistlib/releases/tag/v0.7.3-beta.4)
+and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.4). See the
+[root README](../../README.md) for setup and the unified event table. These clients target engine 0.7.3-beta.4 exactly.
 
 日本語版: [README.ja.md](README.ja.md)
 
@@ -18,7 +18,7 @@ Install the dependencies and place the engine binary (see the [root README](../.
 
 ```sh
 just deps
-just fetch 0.7.3-beta.3
+just fetch 0.7.3-beta.4
 ```
 
 Then run a sample from the repository root:
@@ -29,7 +29,7 @@ python examples/python/gui_client.py --id my-node --room demo-room
 
 Or via `just`: `just gui`, `just cli`, `just bot` (headless).
 
-The samples print the loaded engine version at startup. MistLib 0.7.3-beta.3 is required.
+The samples print the loaded engine version at startup. MistLib 0.7.3-beta.4 is required.
 
 ## Options
 
@@ -51,4 +51,4 @@ Use `node.leave_room(id)` / `node.leave_all_rooms()` in Python,
 `node.leaveRoom(id)` / `node.leaveAllRooms()` on the Web, or
 `MistEngine.I.LeaveRoom(id)` / `MistEngine.I.LeaveAllRooms()` in Unity.
 The first operation leaves one room; the second leaves all rooms.
-All wrappers require mistlib 0.7.3-beta.3. No-argument room-leave calls are deprecated.
+All wrappers require mistlib 0.7.3-beta.4. No-argument room-leave calls are deprecated.

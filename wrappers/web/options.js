@@ -11,7 +11,7 @@ export const DEFAULT_NOSTR_RELAY_URL = "ws://127.0.0.1:7777";
 export function defaultConfig() {
     return {
         signaling: {
-            mode: "nostr",
+            mode: "nostr_auto",
             nostr: {
                 relays: [],
                 discoveryKind: 25049,
@@ -23,8 +23,12 @@ export function defaultConfig() {
     };
 }
 
+function isNostrMode(mode) {
+    return mode === undefined || mode === "nostr" || mode === "nostr_auto" || mode === "nostrAuto";
+}
+
 function assertInviteConfigured(config) {
-    if (config?.signaling?.mode !== "nostr") return;
+    if (!isNostrMode(config?.signaling?.mode)) return;
     const nostr = config.signaling.nostr ?? {};
     const missing = ["inviteSalt", "inviteCode"].filter(
         (k) => typeof nostr[k] !== "string" || nostr[k].length === 0,
@@ -35,7 +39,7 @@ function assertInviteConfigured(config) {
         "Together they derive the secret that decides who can reach your rooms, " +
         "so peers sharing them share a namespace. Pick values unique to your " +
         "application. Example:\n" +
-        '  new MistNode(id, { signaling: { mode: "nostr", nostr: { ' +
+        '  new MistNode(id, { signaling: { mode: "nostr_auto", nostr: { ' +
         'inviteSalt: "my-app", inviteCode: "a-shared-secret" } } })',
     );
 }
@@ -55,7 +59,7 @@ export function normalizeOptions(options) {
 
     if (config.signaling === undefined) {
         config.signaling = defaultConfig().signaling;
-    } else if (config.signaling.mode === "nostr") {
+    } else if (isNostrMode(config.signaling?.mode)) {
         // Merge over the defaults so a caller passing only an invite still gets
         // the kinds and TTLs instead of falling back to the engine's own.
         config.signaling = {

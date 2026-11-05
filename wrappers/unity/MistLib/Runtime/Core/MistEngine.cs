@@ -35,7 +35,7 @@ namespace MistLib
         private const string InviteSalt = "";
         private const string InviteCode = "";
         private static string DefaultConfigJson =>
-            "{\"signaling\":{\"mode\":\"nostr\",\"nostr\":{\"relays\":[\"" + DefaultNostrRelayUrl +
+            "{\"signaling\":{\"mode\":\"nostr_auto\",\"nostr\":{\"relays\":[\"" + DefaultNostrRelayUrl +
             "\"],\"discoveryKind\":25049,\"messageKind\":25050,\"ttlSeconds\":60," +
             "\"maxClockSkewSeconds\":300,\"inviteSalt\":\"" + InviteSalt +
             "\",\"inviteCode\":\"" + InviteCode + "\"}}}";

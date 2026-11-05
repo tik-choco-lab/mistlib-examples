@@ -28,8 +28,8 @@ class EngineApiTests(unittest.TestCase):
         self.node.lib = Mock()
 
     def test_metadata_queries_size_then_reads_exact_utf8_bytes(self):
-        info = json.dumps({'version': '0.7.3-beta.3', 'target': '日本語', 'extra': 'x' * 8192}, ensure_ascii=False)
-        for name, value in [('get_version', '0.7.3-beta.3'), ('get_build_info', info)]:
+        info = json.dumps({'version': '0.7.3-beta.4', 'target': '日本語', 'extra': 'x' * 8192}, ensure_ascii=False)
+        for name, value in [('get_version', '0.7.3-beta.4'), ('get_build_info', info)]:
             with self.subTest(name=name):
                 fn = output_function(value)
                 setattr(self.node.lib, name, fn)
@@ -40,13 +40,13 @@ class EngineApiTests(unittest.TestCase):
 
     def test_module_metadata_does_not_create_a_node(self):
         lib = self.node.lib
-        lib.get_version = output_function('0.7.3-beta.3')
-        lib.get_build_info = output_function('{"version":"0.7.3-beta.3"}')
+        lib.get_version = output_function('0.7.3-beta.4')
+        lib.get_build_info = output_function('{"version":"0.7.3-beta.4"}')
         with patch('mist.core.os.path.exists', return_value=True), \
              patch('mist.core.ctypes.CDLL', return_value=lib), \
              patch('mist.core._active_instance', None):
-            self.assertEqual(mist.get_version(), '0.7.3-beta.3')
-            self.assertEqual(json.loads(mist.get_build_info()), {'version': '0.7.3-beta.3'})
+            self.assertEqual(mist.get_version(), '0.7.3-beta.4')
+            self.assertEqual(json.loads(mist.get_build_info()), {'version': '0.7.3-beta.4'})
             self.assertIsNone(mist.core._active_instance)
         for fn in (lib.get_version, lib.get_build_info):
             self.assertEqual(fn.argtypes, [ctypes.POINTER(ctypes.c_uint8), ctypes.c_size_t])

@@ -1,6 +1,6 @@
 namespace MistLib
 {
-    /// <summary>Application callback codes shared by native and WASM in engine 0.7.3-beta.3.</summary>
+    /// <summary>Application callback codes shared by native and WASM in engine 0.7.3-beta.4.</summary>
     public enum MistLibMessageType : uint
     {
         Raw = 0,

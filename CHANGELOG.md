@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-05 — engine 0.7.3-beta.4
+## 2026-11-05 — engine 0.7.3-beta.4 (Web wrapper 0.3.1-beta.3)
 
 - Pin wrappers, demos, scripts and documentation to engine 0.7.3-beta.4;
   exported APIs and event codes remain unchanged.

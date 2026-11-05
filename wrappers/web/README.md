@@ -90,6 +90,13 @@ Storage exports follow the engine's async API: `storage_add`, `storage_get`,
 `storage_add_pinned`, `storage_kv_set`, `storage_kv_get`, and `storage_kv_delete`.
 Pinning keeps roots out of eviction; KV data is local to the browser origin.
 
+`storage_add_owned` / `storage_add_pinned_owned` (mistlib 0.7.3-beta.3) avoid
+copying large payloads: they transfer the `Uint8Array`'s entire backing
+`ArrayBuffer`, detaching it and every other view of it before returning, and
+reject shared, detached or non-transferable buffers instead of copying. Pass a
+buffer you no longer need, e.g. `await storage_add_owned('clip', bytes)`; do not
+pass a view into a buffer you still use. Native (Python/Unity) has no owned variant.
+
 ## Events
 
 Import the `EVENT_*` constants for `node.onEvent((type, fromId, payload, roomId) => ...)`.

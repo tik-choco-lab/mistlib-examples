@@ -202,6 +202,8 @@ test('storage pin and KV APIs forward bytes and keys to the engine', async () =>
     await wrapper.storage_unpin('cid');
     await wrapper.storage_is_pinned('cid');
     await wrapper.storage_add_pinned('name', bytes);
+    await wrapper.storage_add_owned('name', bytes);
+    await wrapper.storage_add_pinned_owned('name', bytes);
     await wrapper.storage_kv_set('key', bytes);
     await wrapper.storage_kv_get('key');
     await wrapper.storage_kv_delete('key');
@@ -209,7 +211,8 @@ test('storage pin and KV APIs forward bytes and keys to the engine', async () =>
         ['storage_add', 'name', bytes], ['storage_get', 'cid'],
         ['storage_add_at', 'name', bytes, 1, 2, 3], ['storage_pin', 'cid'],
         ['storage_unpin', 'cid'], ['storage_is_pinned', 'cid'],
-        ['storage_add_pinned', 'name', bytes], ['storage_kv_set', 'key', bytes],
+        ['storage_add_pinned', 'name', bytes], ['storage_add_owned', 'name', bytes],
+        ['storage_add_pinned_owned', 'name', bytes], ['storage_kv_set', 'key', bytes],
         ['storage_kv_get', 'key'], ['storage_kv_delete', 'key'],
     ]);
 });

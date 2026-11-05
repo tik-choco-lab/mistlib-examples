@@ -34,6 +34,16 @@ export function storage_pin(rootCid: string): Promise<void>;
 export function storage_unpin(rootCid: string): Promise<void>;
 export function storage_is_pinned(rootCid: string): Promise<boolean>;
 export function storage_add_pinned(name: string, data: Uint8Array): Promise<string>;
+/**
+ * Like `storage_add`, but takes ownership of `data`'s entire backing ArrayBuffer
+ * without copying: the buffer (and every view of it) is detached before this returns.
+ * Only the view's bytes are stored. Rejects if the buffer is shared, already detached
+ * or not transferable; never falls back to a copy. Ownership is consumed even if the
+ * asynchronous write later fails. Requires mistlib 0.7.3-beta.3.
+ */
+export function storage_add_owned(name: string, data: Uint8Array): Promise<string>;
+/** Ownership-taking variant of `storage_add_pinned`; see `storage_add_owned`. */
+export function storage_add_pinned_owned(name: string, data: Uint8Array): Promise<string>;
 export function storage_kv_set(key: string, data: Uint8Array): Promise<void>;
 export function storage_kv_get(key: string): Promise<Uint8Array | undefined>;
 export function storage_kv_delete(key: string): Promise<void>;

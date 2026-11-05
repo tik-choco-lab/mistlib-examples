@@ -41,6 +41,8 @@ const {
     storage_unpin: mist_storage_unpin,
     storage_is_pinned: mist_storage_is_pinned,
     storage_add_pinned: mist_storage_add_pinned,
+    storage_add_owned: mist_storage_add_owned,
+    storage_add_pinned_owned: mist_storage_add_pinned_owned,
     storage_kv_set: mist_storage_kv_set,
     storage_kv_get: mist_storage_kv_get,
     storage_kv_delete: mist_storage_kv_delete,
@@ -77,6 +79,9 @@ export const storage_pin = mist_storage_pin;
 export const storage_unpin = mist_storage_unpin;
 export const storage_is_pinned = mist_storage_is_pinned;
 export const storage_add_pinned = mist_storage_add_pinned;
+// Zero-copy adds: synchronously transfer (detach) data's whole backing ArrayBuffer.
+export const storage_add_owned = mist_storage_add_owned;
+export const storage_add_pinned_owned = mist_storage_add_pinned_owned;
 // Mutable local KV (SPEC-17): OPFS-backed, same-origin shared, not P2P-replicated.
 export const storage_kv_set = mist_storage_kv_set;
 export const storage_kv_get = mist_storage_kv_get;

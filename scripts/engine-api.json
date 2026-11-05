@@ -37,6 +37,8 @@
     "storage_unpin",
     "storage_is_pinned",
     "storage_add_pinned",
+    "storage_add_owned",
+    "storage_add_pinned_owned",
     "storage_kv_set",
     "storage_kv_get",
     "storage_kv_delete",

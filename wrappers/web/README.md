@@ -7,7 +7,7 @@ and [npm](https://www.npmjs.com/package/@tik-choco/mistlib/v/0.7.3-beta.3). See 
 [root README](../../README.md) for setup and the unified event table. This wrapper targets engine 0.7.3-beta.3 exactly.
 
 ```sh
-npm i @tik-choco/mistlib@0.7.3-beta.3 @tik-choco/mistlib-web@0.3.1-beta.1
+npm i @tik-choco/mistlib@0.7.3-beta.3 @tik-choco/mistlib-web@0.3.1-beta.2
 ```
 
 Use in a browser application:

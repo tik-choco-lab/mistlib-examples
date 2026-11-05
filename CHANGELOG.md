@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-05 — Web wrapper 0.3.1-beta.2
+
+- feat(web): expose storage_add_owned / storage_add_pinned_owned (zero-copy, mistlib 0.7.3-beta.3)
+
 ## 2026-11-04 — engine 0.7.3-beta.3 (Web wrapper 0.3.1-beta.1)
 
 - Target engine 0.7.3-beta.3 (npm `beta` dist-tag, GitHub prerelease) exactly

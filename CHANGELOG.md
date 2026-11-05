@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-04 — engine 0.7.3-beta.3
+## 2026-11-04 — engine 0.7.3-beta.3 (Web wrapper 0.3.1-beta.1)
 
 - Target engine 0.7.3-beta.3 (npm `beta` dist-tag, GitHub prerelease) exactly
   across wrappers, demo import maps, scripts and API manifests; fetch local
@@ -10,6 +10,9 @@
   transfer robustness, wasm storage work off the main thread).
 - Version checks in `sync-mistlib.sh`, `check-engine-api.mjs` and the
   update-engine workflow now accept semver prerelease versions.
+- Add `just publish status|beta|stable [--unity] [--push] [--dry-run]` for Web
+  wrapper releases. Prereleases are staged under the npm `beta` dist-tag; a
+  stable wrapper is refused while the engine pin is a prerelease.
 
 ## 2026-10-26 — engine 0.7.1 (Web wrapper 0.3.0, Unity package 0.2.0)
 
